@@ -80,117 +80,62 @@ A _user-defined type_ allows us to give a name to a commonly used pattern of dat
         10, 20, 30
 ```
 
-A _user-defined type_ begins with a percent sigil followed by an _identifier_: a name `a-z`, `0-9` and `_`, though cannot begin with a numeral.
+A _user-defined type_ begins with a percent sigil followed by an _identifier_: a name containing `A-Z`, `a-z`, `0-9` and `_`, though cannot begin with a numeral.
 
+Retronym distinguishes between the defining of symbols and their recall based on the indent; in the first line the _user-defined type_ symbol appears without indent, the third line also defines a _label_ ("`:someData`") and the fourth line, which sets up the _record-type_, **uses** the new _user-defined type_ because it begins (indented) 'under' the _label_.
 
+The following would be incorrect:
+
+```retronym
+;ERROR! Not a definition:
+        %thing  byte, word, long
+
+:someData
+%thing              ;ERROR! Cannot define `%thing% here
+        1, 2, 3
+        10, 20, 30
+```
+
+The _record-type_ is not limited to a single _user-defined type_. You can combine _built-in types_ and _user-defined types_ freely:
+
+```retronym
+:someData
+        byte, %thing, %thing, word
+```
+
+_User-defined types_ can be nested:
+
+```retronym
+%vector         word, word
+%enemy          %position, %position
+```
 
 
 
 
 <!--
 
-User-Defined Types
---------------------------------------------------------------------------------
-
-A _user-defined type_ in Retronym is a percentage sign with an identifier attached.
-
-You can define your own types by renaming and combining other Types to create sequences of Types that suit your data. Let's create a Type that combines three different Types:
-
-```retronym
-%myType     %byte, %word, %long
-```
-
-The Type to the left, at the beginning of the line (this is important), is the _new_ Type you are creating and naming. The Type(s) to the right will define what your new Type is made up of and their order.
-
-> **PRO TIP:** The use of commas is entirely optional but helps us to distinguish between the left-hand and right-hand side of a definition.
-
-Here we've defined a new Type `%myType` which describes a byte, followed by a Word (two bytes together), followed by a Long (four bytes).
-
-When we use this new Type, the data we provide will automatically _'fit'_ the Type, filling out the necessary bytes. For example, using `%myType` with the data `1, 1, 1` would be assembled, not into three bytes (`$01 $01 $01`) but instead, into 7 bytes: `$01, $01 $00, $01 $00 $00 $00`. (note that these bytes are in Little-Endian order)
-
-> **PRO TIP:** "Little Endian" means that in a multi-byte number the byte(s) that contain the lower-power portion of the number come first, e.g. for the hexadecimal number `$FF00` (=65'280 decimal) the bytes are in the order: `$00, $FF`
-
-Using Types -- and creating your own -- will allow you to write your data in a more logical, readable and friendly manner without having to write every single byte out manually.
-
-In the next heading, we'll look at how we actually apply data to Types using "Records".
-
-Record Types
---------------------------------------------------------------------------------
-
-Data is often stored in structured, table-like forms. You might have, for example, a table of data that describes the enemies present in a level. The _'columns'_ of this table (known as "Fields") would define the properties of each enemy such as X-Position, Y-Position, Kind, Weapon and Health. The _'rows'_ would define each specific enemy, providing a value for each of those columns.
-
-In databases, we call that list of Fields a "Record Type" and each row of data a "Record". The number of bytes that a Record occupies -- the _'width'_ of the Record -- is called the "stride".
-
-In Retronym the simplest kind of Record is a single byte. We define our Record-stride just by naming the Type(s) we want to form a Record:
-
-```retronym
-:enemies        `a label to begin a procedure / table
-    %byte       `set the Record-stride to a single byte
-
-    1, 2, 3     `populate three records of data
-    ;           `end of procedure / table
-```
-
-The first line begins a 'block' of code and/or data; these are called Labels and we'll get them soon. The important part is the use of the `%byte` Type. Note that it is indented: this is how Retronym knows that you want to _use_ this Type rather than define a new one (no-indent).
-
-Now that the Record-stride has been defined, any data that follows will be assembled according to the Type(s) in the stride. As soon as one Record is filled by the data, the next Record automatically begins.
-
-A single-byte stride is not of much use, so we can list multiple Types to define a longer Record-stride:
-
-```retronym
-:enemies
-    %byte %word %long
-
-    1, 100, 560
-    ;
-```
-
-We can also use our own defined Types to reduce the amount of repetition across the code:
-
-```retronym
-%enemy      %byte %word %long
-
-:enemies
-    %enemy
-
-    1, 100, 500
-    2, 250, 7400
-    ;
-```
-
-When a Record has been filled it is "satisfied". You cannot partially fill a Record and leave it "unsatisfied"!
-
-```retronym
-:enemies
-    %enemy
-
-    1, 100, 500
-    2, 250          ;<-- ERROR: unsatisfied record!
-    ;
-```
-
 Record-strides can also be mixed within a procedure / table. In real-world usage you will probably need to produce data-tables that begin with a list of pointers to index the actual data that follows, you may even have to intermix assembly code and data or even make tables of assembly code!
 
 ```retronym
-%boxA       %byte %byte
-%boxB       %word
+%boxA       byte byte
+%boxB       word
 
 :boxes
-    `a record using the custom types:
+    ;a record using the custom types:
     %boxA %boxB
 
     1, 2, 34
 
-    `two records using only the first custom type:
+    ;two records using only the first custom type:
     %boxA
 
     1, 2, 3, 4
 
-    `two records using only the second custom type:
+    ;two records using only the second custom type:
     %boxB
 
     12, 34
-    ;
 ```
 
 These examples are nice and all, but quite trite as soon as you get to something meatier; what happens when your Records are very wide?
@@ -212,13 +157,12 @@ Type Repetition
 The _Repetition Operator_ (" `x` ") expands a single Type into a list, repeating it however many times we want. There must be whitespace either side of the "`x`" and it must be lower-case (to distinguish it from the machine register "`X`").
 
 ```retronym
-`define a custom Type with a stride of 10 bytes followed by a word
-%aThing     %byte x 10, %word
+;define a custom Type with a stride of 10 bytes followed by a word
+%aThing     byte x 10, word
 
 :things
     %aThing
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12345
-    ;
 ```
 
 Data Repetition
@@ -227,23 +171,23 @@ Data Repetition
 The _Repetition Operator_ ("`x`") also helps us when we have data that repeats itself. If our data consisted of a hundred zeroes followed by fifty of one number and then twenty-five of another number, we could write that as:
 
 ```retronym
-`repeats each number the given amount of times
+;repeats each number the given amount of times
 0 x 100, 1 x 50, 2 x 25
 ```
 
 This shouldn't be confused by the mathematical mutiply operator "`*`", e.g.:
 
 ```retronym
-`calculate 6 * 7 and repeat the result 42 times
+;calculate 6 * 7 and repeat the result 42 times
 6 * 7 x 42
 ```
 
 Data is often more complex than that and you may need to repeat a _sequence_ of numbers rather than a single value over and over. Using grouping parantheses you can specify a list of values to repeat:
 
 ```retronym
-`outputs the numbers 1 to 5, repeated 10 times
+;outputs the numbers 1 to 5, repeated 10 times
 (1, 2, 3, 4, 5) x 10
-`note that this would output 1 to 4, then the number 5 ten times
+;note that this would output 1 to 4, then the number 5 ten times
 1, 2, 3, 4, 5 x 10
 ```
 
@@ -255,8 +199,8 @@ Ranges
 A _Range_ can automatically generate a list from a starting number through to an ending number (inclusive):
 
 ```retronym
-1 ~ 5       `outputs 1, 2, 3, 4, 5
-5 ~ 1       `if end is lower than start, counts backwards
+1 ~ 5       ;outputs 1, 2, 3, 4, 5
+5 ~ 1       ;if end is lower than start, counts backwards
 ```
 
 But that's limited to numbers strictly in order. What if your data requires a larger step between numbers?
@@ -269,8 +213,8 @@ If we think of a _Range_ as a stack which pops off each value automatically in s
 The `?` operator can be thought of as a substitute for 'the current value' coming from the Range. Here we show how you can create a data list of even and odd numbers:
 
 ```retronym
-1 ~ 5 ? * 2             `outputs 2, 4, 6, 8, 10 (evens)
-1 ~ 5 ? * 2 - 1         `outputs 1, 3, 5, 7, 9 (odds)
+1 ~ 5 ? * 2             ;outputs 2, 4, 6, 8, 10 (evens)
+1 ~ 5 ? * 2 - 1         ;outputs 1, 3, 5, 7, 9 (odds)
 ```
 
 Each number from the Range is fed into the expression to the right, and the result of the calculation is returned as the value to output instead.
@@ -283,8 +227,8 @@ Doing large multiplications on most retro systems is very slow, so a lookup tabl
 
 ```retronym
 :multiplyBy32
-    %word   0 ~ 255 ? * 32
-    ;
+    word
+    0 ~ 255 ? * 32
 ```
 
 That's it! You've just produced 256 sixteen-bit numbers (512 bytes) mapping the input byte (0-255) to its value when multiplied by 32.
@@ -353,10 +297,9 @@ We could just increase the stride to the right number of bytes, like this:
 
 ```retronym
 :announcement
-    %byte~13
+    byte~13
 
     "Hello, World!"
-    ;
 ```
 
 Variadic Types
