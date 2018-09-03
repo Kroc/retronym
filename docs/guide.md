@@ -10,7 +10,7 @@ Retronym is an assembler -- a program that takes written CPU instruction code (a
 
 Assemblers have existed since the 1950s, they were invented so that programmers no longer had to flip switches for each individual bit in memory.
 
-Almost all console games written during the 1980s were written in assembly.
+Almost all console games written during the 1980s were written in assembly. The "C" programming language only became common in the 90s when 16/32-bit hardware had taken over from the 8-bit microcomputer generation.
 
 Basic Types
 --------------------------------------------------------------------------------
@@ -19,7 +19,7 @@ In assembly, all code and data are ultimately just bytes. At the CPU-level, ther
 
 Because Retronym is an assembler and you will be the one writing the assembly code, it is critical that the size of program data matches the instructions intended to read it -- if you write an instruction to read two bytes, but the data is only one byte, your program will quickly go haywire.
 
-_Types_ are used to describe the storage requirements of data. A numerical value such as "42" doesn't tell us if it should occupy one, two or four bytes of memory. Whilst numbers below 256 will fit into one byte, the numebr alone doesn't tell us if it's expected to increase to a much bigger number (such as a score).
+_Types_ are used to describe the storage requirements of data. A numerical value such as "42" doesn't tell us if it should occupy one, two or four bytes of memory. Whilst numbers below 256 will fit into one byte, the number alone doesn't tell us if it's expected to increase to a much bigger number (such as a score).
 
 There are five basic built-in _types_ in Retronym that describe data sizes for retro systems:
 
@@ -36,7 +36,7 @@ Records
 
 Data is often stored in structured, table-like forms. You might have, for example, a table of data that describes the enemies present in a level. The 'columns' of this table would define the properties of each enemy such as X-Position, Y-Position, Kind, Weapon and Health etc. The 'rows' would define each specific enemy, providing a value for each of those columns.
 
-The example below demonstates a simple data-table:
+The example below demonstrates a simple data-table:
 
 ```retronym
 :someData
@@ -45,7 +45,7 @@ The example below demonstates a simple data-table:
         10, 20, 30
 ```
 
-The first line is a _label_. It is a named location (a.k.a "symbol") in the final binary, much like a "function" in other programming languages, or a data-table (as in this example).
+The first line is a _label_. It is a named value (a.k.a "symbol") in the final binary, much like an exported function in other programming languages, or a data-table (as in this example).
 
 The second line defines a _record type_. This describes the data-size of each 'column' in a data-table; e.g. here we have three columns.
 
@@ -82,12 +82,12 @@ A _user-defined type_ allows us to give a name to a commonly used pattern of dat
 
 A _user-defined type_ begins with a percent sigil followed by an _identifier_: a name containing `A-Z`, `a-z`, `0-9` and `_`, though cannot begin with a numeral.
 
-Retronym distinguishes between the defining of symbols and their recall based on the indent; in the first line the _user-defined type_ symbol appears without indent, the third line also defines a _label_ ("`:someData`") and the fourth line, which sets up the _record-type_, **uses** the new _user-defined type_ because it begins (indented) 'under' the _label_.
+Retronym distinguishes between the defining of symbols and their recall based on the indent; in the first line the _user-defined type_ appears without indent, the third line also defines a _label_ ("`:someData`") and the fourth line, which sets up the _record-type_, **uses** the new _user-defined type_ because it begins indented ('under') the _label_.
 
 The following would be incorrect:
 
 ```retronym
-;ERROR! Not a definition:
+        ;ERROR! Not a definition:
         %thing  byte, word, long
 
 :someData
@@ -103,11 +103,11 @@ The _record-type_ is not limited to a single _user-defined type_. You can combin
         byte, %thing, %thing, word
 ```
 
-_User-defined types_ can be nested:
+_User-defined types_ can contain other _user-defined types_:
 
 ```retronym
 %vector         word, word
-%enemy          %position, %position
+%enemy          %vector, %vector
 ```
 
 
@@ -138,31 +138,22 @@ Record-strides can also be mixed within a procedure / table. In real-world usage
     12, 34
 ```
 
-These examples are nice and all, but quite trite as soon as you get to something meatier; what happens when your Records are very wide?
-
-```retronym
-:bigThings
-    byte  byte  byte  byte  byte  byte  byte  byte  byte  byte  ;...
-    1,    2,    3,    4,    5,    6,    7,    8,    9,    10    ;...
-    10,   20,   30,   40,   50,   60,   70,   80,   90,   100   ;...
-```
-
-Oh dear, that's not very pretty, and that's just 10 bytes! Thankfully we have the means to condense this:
-
 -->
 
 Type Repetition
 --------------------------------------------------------------------------------
 
-The _Repetition Operator_ (" `x` ") expands a single Type into a list, repeating it however many times we want. There must be whitespace either side of the "`x`" and it must be lower-case (to distinguish it from the machine register "`X`").
+These examples are nice and all, but quite trite as soon as you get to something meatier; what happens when your _records_ are very wide?
+
+The _repetition operator_ (" `x` ") expands a single _type_ into a list, repeating it however many times we want. There must be whitespace either side of the "`x`" and it must be lower-case (to distinguish it from the machine register "`X`").
 
 ```retronym
-;define a custom Type with a stride of 10 bytes followed by a word
-%aThing     byte x 10, word
+;define a type with a stride of 10 bytes followed by a word
+%thing      byte x 10, word
 
-:things
-    %aThing
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12345
+:longThing
+        %thing
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12345
 ```
 
 Data Repetition
@@ -175,14 +166,14 @@ The _Repetition Operator_ ("`x`") also helps us when we have data that repeats i
 0 x 100, 1 x 50, 2 x 25
 ```
 
-This shouldn't be confused by the mathematical mutiply operator "`*`", e.g.:
+This shouldn't be confused with the mathematical multiply operator "`*`", e.g.:
 
 ```retronym
 ;calculate 6 * 7 and repeat the result 42 times
 6 * 7 x 42
 ```
 
-Data is often more complex than that and you may need to repeat a _sequence_ of numbers rather than a single value over and over. Using grouping parantheses you can specify a list of values to repeat:
+Data is often more complex than that and you may need to repeat a _sequence_ of numbers rather than a single value over and over. Using grouping parentheses you can specify a list of values to repeat:
 
 ```retronym
 ;outputs the numbers 1 to 5, repeated 10 times
@@ -191,12 +182,12 @@ Data is often more complex than that and you may need to repeat a _sequence_ of 
 1, 2, 3, 4, 5 x 10
 ```
 
-We still have to write that 1 to 5 as individual numbers though, and what if that were 1 to 100 or more!? This is where **Ranges** come in.
+We still have to write that 1 to 5 as individual numbers though, and what if that were 1 to 100 or more!? This is where _ranges_ come in.
 
 Ranges
 --------------------------------------------------------------------------------
 
-A _Range_ can automatically generate a list from a starting number through to an ending number (inclusive):
+A _range_ can automatically generate a list from a starting number through to an ending number (inclusive):
 
 ```retronym
 1 ~ 5       ;outputs 1, 2, 3, 4, 5
@@ -208,25 +199,23 @@ But that's limited to numbers strictly in order. What if your data requires a la
 Range Mapping
 --------------------------------------------------------------------------------
 
-If we think of a _Range_ as a stack which pops off each value automatically in succession, then we can provide a calculation to apply to each value using the _Function Operator_.
+If we think of a _range_ as a stack which pops off each value automatically in succession, then we can provide a calculation to apply to each value using the _function operator_.
 
-The `?` operator can be thought of as a substitute for 'the current value' coming from the Range. Here we show how you can create a data list of even and odd numbers:
+The `?` operator can be thought of as a substitute for 'the current value' coming from the range. Here we show how you can create a data list of even and odd numbers:
 
 ```retronym
 1 ~ 5 ? * 2             ;outputs 2, 4, 6, 8, 10 (evens)
-1 ~ 5 ? * 2 - 1         ;outputs 1, 3, 5, 7, 9 (odds)
+1 ~ 5 ? * 2 - 1         ;outputs 1, 3, 5, 7, 9  (odds)
 ```
 
-Each number from the Range is fed into the expression to the right, and the result of the calculation is returned as the value to output instead.
+Each number from the _range_ is fed into the expression to the right, and the result of the calculation is returned as the value to output instead.
 
-The ability to take a range of numebrs and do a calculation on each should not be under-estimated! It's an incredibly powerful tool for creating look-up tables for retro systems.
-
-The ability to take a range of numebrs and do a calculation on each should not be under-estimated! It's an incredibly powerful tool for creating look-up tables for retro systems.
+The ability to take a range of numbers and do a calculation on each should not be under-estimated! It's an incredibly powerful tool for creating look-up tables for retro systems.
 
 Doing large multiplications on most retro systems is very slow, so a lookup table can speed things up greatly. Let's build a lookup table for multiplying a byte by 32:
 
 ```retronym
-:multiplyBy32
+:multiplyBy32table
     word
     0 ~ 255 ? * 32
 ```
@@ -241,12 +230,12 @@ In some kinds of expression you will need to refer to the input value more than 
 0, 1, 2 ~ 8 ? - 1 + ? - 2
 ```
 
-This outputs the first ten numbers in the Fibonacci sequence: `0, 1, 1, 2, 3, 5, 8, 13, 21, 34`. The first two numbers are always `0` and `1` and then we take the numbers in the range `2` through `8` and output _'the current number minus 1, plus: the current numebr minus 2'_.
+This outputs the first ten numbers in the Fibonacci sequence: `0, 1, 1, 2, 3, 5, 8, 13, 21, 34`. The first two numbers are always `0` and `1` and then we take the numbers in the range `2` through `8` and output _'the current number minus 1, plus: the current number minus 2'_.
 
 List Mapping
 --------------------------------------------------------------------------------
 
-Lists can also be mapped. Use grouping parentehses to explicitly state the beginning and end of the list (or you'll end up just mapping the last value on its own):
+Lists can also be mapped. Use grouping parentheses to explicitly state the beginning and end of the list (or you'll end up just mapping the last value on its own):
 
 ```retronym
 () ?
@@ -277,7 +266,7 @@ Because strings are just bytes in Retronym you can freely intermix them with num
 
 Retronym **does not** provide string escapement sequences, for example "`\n`" used to represent a new-line character in many programming languages.
 
-This is because: _1._ string escapement sequences have aways been a bad idea (leading to untold bugs and security issues) and _2._ not all retro systems use ASCII or even have the concept of a new-line character code (such as consoles).
+This is because: _1._ string escapement sequences have always been a bad idea (leading to untold bugs and security issues) and _2._ not all retro systems use ASCII or even have the concept of a new-line character code (such as consoles).
 
 ```retronym
 :announcement
@@ -287,11 +276,11 @@ This is because: _1._ string escapement sequences have aways been a bad idea (le
     ;
 ```
 
-There is something a little-bit wrong here that I hope you've noticied in an "aha!" / light-bulb moment.
+There is something a little-bit wrong here that I hope you've noticed in an "aha!" / light-bulb moment.
 
 The stride is only one-byte wide, meaning each letter of the text becomes its own Record!
 
-As far as the example program is concerened it makes no difference, but when we begin wanting to manipulate and share data across a large code-base we don't want to be dealing with individual letters like that.
+As far as the example program is concerned it makes no difference, but when we begin wanting to manipulate and share data across a large code-base we don't want to be dealing with individual letters like that.
 
 We could just increase the stride to the right number of bytes, like this:
 

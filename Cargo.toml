@@ -1,0 +1,11 @@
+# retronym (C) copyright Kroc Camen 2017, 2018
+# BSD 2-clause licence; see LICENSE.TXT
+
+[package]
+name = "retronym"
+version = "0.0.0"
+authors = ["Kroc Camen <kroc@camendesign.com>"]
+
+[dependencies]
+pest = "^1.0"
+pest_derive = "^1.0"

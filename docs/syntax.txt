@@ -1,0 +1,25 @@
+
+    ;comment
+
+    atom                        ;a single unique word; it has no associated value, only uniqueness
+
+    'CONST                      ;constant?
+
+    $FFFF                       ;hexadecimal number
+
+    %10101010                   ;binary number
+
+    :label                      ;label name
+
+    @attribute                  ;an attribute -- an offside associated value, e.g. size
+
+    %type                       ;custom type
+
+    #type                       ;a hash (array)
+
+    !macro                      ;macro name
+
+    $.RAM                       ;RAM variable name
+
+    "a string"
+    
