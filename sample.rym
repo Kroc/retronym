@@ -1,0 +1,29 @@
+;comment
+
+    adc # $ff
+    adc $ff
+    adc $ff, x
+    adc $ff00
+    adc $ff00, x
+    adc $ff00, y
+    adc ($ff, x)
+    adc ($ff), y
+
+    and # $ff
+    and $ff
+    and $ff, x
+    and $ff00
+    and $ff00, x
+    and $ff00, y
+    and ($ff, x)
+    and ($ff), y
+
+    asl
+    asl a
+    asl $ff
+    asl $ff, x
+    asl $ff00
+    asl $ff00, x
+
+    bcc
+    

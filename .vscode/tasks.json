@@ -12,6 +12,17 @@
             ],
             "problemMatcher": [
                 "$rustc"
+            ]
+        },
+        {
+            "type": "cargo",
+            "label": "cargo run",
+            "command": "cargo",
+            "args": [
+                "run"
+            ],
+            "problemMatcher": [
+                "$rustc"
             ],
             "group": {
                 "kind": "build",

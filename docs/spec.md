@@ -6,7 +6,7 @@ Source Code Representation
 
 Source code is defined as Unicode UTF-8 input. This must be broken into functional units of text known as _tokens_. These are largely analogous with the words in a text-document, but there are more specific rules involved for runs of text such as Strings and Comments.
 
-It should be noted early on that Retronym is case-sensitive and white-space insensitive, the details of which will be covered a little later.
+It should be noted early on that Retronym is case-sensitive and white-space sensitive, the details of which will be covered a little later.
 
 The term _white-space_ refers to ASCII space, horizontal-tab, carriage-return and/or line-feed (collectively know as 'new-line' or 'end-of-line').
 
@@ -49,7 +49,7 @@ Strings represent a contiguous series of UTF-8 byte values. They use the _wrappi
 
     "This is a string!"
 
-The following regular expression describes a string literal.
+The following regular-expression describes a string literal.
 
 ```regex
 "[^"]+"
@@ -88,217 +88,6 @@ A _documentation block-comment_ follows the _block tokenisation rule_ and begins
     ```
 
 This is intended for longer, multi-line, free-form external documentation.
-
-### Assembly Mnemonics ###
-
-Assembly language mnemonics follow the _standard tokenisation rule_. This section does not detail the allowed parameters for the numerous assembly instructions, just the keywords reserved for tokenisation.
-
-**NOTE:** The "CPU(s)" column refers to the following:
-
-* _"Z80"_ - Zilog [Z80] _only_ (not on [Nintendo Game Boy][gb80])
-* _"Z80+"_ - Zilog [Z80], including Sharp LR35902 ([Nintendo Game Boy][gb80])
-* _"Z80?"_ - Undocumented [Z80] Instruction. Some Z80s only
-* _"GB80"_ - Sharp LR35902 ([Nintendo Game Boy][gb80]) _only_
-* _"6502"_ - MOS Technologies / Commodore, 6502 / 6507 / 6510
-
-[z80]: https://en.wikipedia.org/wiki/Zilog_Z80
-[gb80]: https://en.wikipedia.org/wiki/Game_Boy
-
-| keyword   | CPU(s)            | Description
-|-----------|-------------------|----------------------------------------------|
-| `adc`     | Z80+, 6502        | Add to Accumulator with Carry
-| `add`     | Z80+              | Add to Accumulator
-| `and`     | Z80+, 6502        | Logical AND with Accumulator
-| `bit`     | Z80+, 6502        | Test Bit
-| `call`    | Z80+              | Call Routine
-| `ccf`     | Z80+              | Complement (invert) Carry Flag
-| `cp`      | Z80+              | Compare with Accumulator
-| `cpd`     | Z80+              | Compare and Decrement
-| `cpdr`    | Z80+              | Compare, Decrement and Repeat
-| `cpi`     | Z80+              | Compare and Increment
-| `cpir`    | Z80+              | Compare, Increment and Repeat
-| `cpl`     | Z80+              | Complement (invert) Accumulator
-| `daa`     | Z80+              | Decimal Adjust Accumulator
-| `dec`     | Z80+              | Decrement
-| `di`      | Z80+              | Disable Interrupts
-| `djnz`    | Z80               | Decrement, Jump if Not Zero
-| `ei`      | Z80+              | Enable Interrupts
-| `ex`      | Z80               | Exchange DE and HL Registers
-| `exx`     | Z80               | Exchange AF / DE / HL with AF' / DE' / HL'
-| `halt`    | Z80+              | Halt (Wait for Interrupt)
-| `im`      | Z80+              | Interrupt Mode
-| `in`      | Z80               | Input from Port
-| `inc`     | Z80+              | Increment
-| `ind`     | Z80               | Input from Port and Decrement
-| `indr`    | Z80               | Input from Port, Decrement and Repeat
-| `ini`     | Z80               | Input from Port and Increment
-| `inir`    | Z80               | Input from Port, Increment and Repeat
-| `jp`      | Z80+              | Jump (absolute)
-| `jr`      | Z80+              | Jump Relative
-| `ld`      | Z80+              | Load
-| `ldd`     | Z80+              | Load and Decrement
-| `lddr`    | Z80+              | Load, Decrement and Repeat
-| `ldi`     | Z80+              | Load and Increment
-| `ldir`    | Z80+              | Load, Increment and Repeat
-| `neg`     | Z80+              | Negate Accumulator
-| `nop`     | Z80+              | No Operation
-| `or`      | Z80+              | Logical OR with Accumulator
-| `otdr`    | Z80               | Output to Port, Decrement and Repeat
-| `otir`    | Z80               | Output to Port, Increment and Repeat
-| `out`     | Z80               | Output to Port
-| `outd`    | Z80               | Output to Port and Decrement
-| `outi`    | Z80               | Output to Port and Increment
-| `pop`     | Z80+              | Pop from Stack
-| `push`    | Z80+              | Push to Stack
-| `res`     | Z80+              | Reset Bit
-| `ret`     | Z80+              | Return from Routine
-| `reti`    | Z80+              | Return from Interrupt
-| `retn`    | Z80+              | Return from Non-Maskable Interrupt
-| `rl`      | Z80+              | Rotate Operand Left
-| `rla`     | Z80+              | Rotate Accumulator Left
-| `rlc`     | Z80+              | Rotate Operand Left with Carry
-| `rlca`    | Z80+              | Rotate Accumulator Left with Carry
-| `rld`     | Z80+              | Rotate Left Decimal
-| `rr`      | Z80+              | Rotate Operand Right
-| `rra`     | Z80+              | Rotate Accumulator Right
-| `rrc`     | Z80+              | Rotate Operand Right with Carry
-| `rrca`    | Z80+              | Rotate Accumulator Right with Carry
-| `rrd`     | Z80+              | Rotate Right Decimal
-| `rst`     | Z80+              | Reset (call page zero)
-| `sbc`     | Z80+              | Subtract from Accumulator with Carry
-| `scf`     | Z80+              | Set Carry Flag
-| `set`     | Z80+              | Set Bit
-| `sla`     | Z80+              | Shift Accumulator Left
-| `sll`     | Z80?              | Shift Operand Left (undocumented)
-| `sra`     | Z80+              | Shift Accumulator Right
-| `srl`     | Z80+              | Shift Operand Right
-| `stop`    | GB80              | Stop CPU
-| `sub`     | Z80+              | Subtract from Accumulator
-| `xor`     | Z80+              | Logical Exclusive-OR with Accumulator
-
-### Registers ###
-
-CPU registers for the target machine follow the _standard tokenisation rule_.
-The following keywords are reserved as registers:
-
-**NOTE:** The "CPU(s)" column refers to the following:
-
-* _"Z80"_ - Zilog [Z80] _only_ (not on [Nintendo Game Boy][gb80])
-* _"Z80+"_ - Zilog [Z80], including Sharp LR35902 ([Nintendo Game Boy][gb80])
-* _"Z80?"_ - Undocumented [Z80] Instruction. Some Z80s only
-
-[z80]: https://en.wikipedia.org/wiki/Zilog_Z80
-[gb80]: https://en.wikipedia.org/wiki/Game_Boy
-
-| Keyword   | CPU(s)            | Description
-|-----------|-------------------|----------------------------------------------|
-| `A`       | Z80+, 6502        | Accumulator
-| `B`       | Z80+              | B Register
-| `C`       | Z80+              | C Register
-| `D`       | Z80+              | D Register
-| `E`       | Z80+              | E Register
-| `H`       | Z80+              | H Register
-| `L`       | Z80+              | L Register
-| `I`       | Z80+              | Interrupt Register (unrelated to `IX` / `IY`)
-| `R`       | Z80+              | Refresh Register
-| `AF`      | Z80+              | Register Pair AF
-| `BC`      | Z80+              | Register Pair BC
-| `DE`      | Z80+              | Register Pair DE
-| `HL`      | Z80+              | Register Pair HL
-| `IX`      | Z80               | Index-X Register (16-bit)
-| `IY`      | Z80               | Index-Y Register (16-bit)
-| `IXH`     | Z80?              | Index-X Register (upper half)
-| `IXL`     | Z80?              | Index-X Register (lower half)
-| `IYH`     | Z80?              | Index-Y Register (upper half)
-| `IYL`     | Z80?              | Index-Y Register (lower half)
-| `SP`      | Z80+              | Stack Pointer
-| `X`       | 6502              | Index-X Register (8-bit)
-| `Y`       | 6502              | Index-Y Register (8-bit)
-
-All _registers_ support _hints_, a form of documentation to describe what a _register_ is being used for. A _register hint_ is appended to a _register_ keyword with a single back-tick character and a user-chosen arbitrary descriptor consisting of any combination of letters A-Z (uppercase), a-z (lowercase), "`_`" (underscore) and numerals 0-9 with the one exception that it may not begin with a numeral.
-
-    HL`width        ;documents that register HL currently holds a width value
-    HL `width       ;ERROR: separation between register and hint disallowed
-
-The _hint_ is purely descriptive and does not affect assembly. A different _hint_ can be used for every _register_ use to document the changing role of the _register_ in your assembly code.
-
-_Shadow registers_ are secondary _registers_ in a CPU not normally accessible by their own name, instead an assembly instruction swaps the contents of an existing _register_ with its shadow counterpart. It is useful to keep track of this swapping happening and a different form of _register hint_ is provided to do this.
-
-    AF'flags        ;the shadow version of AF is in play
-    AF'             ;the hint descriptor is optional for shadow hints
-
-    AF'`flags       ;this is not valid
-    AD`'flags       ;neither is this
-
-    ex AF  AF'      ;Z80 code to swap to AF shadow register
-    ex AF' AF       ;Z80 code to swap back to original contents
-
-The use of _shadow hints_ are valid only on _registers_ that support them, namely:
-
-| Keyword   | CPU(s)            | Description
-|-----------|-------------------|----------------------------------------------|
-| `A'`      | Z80               | Accumulator
-| `B'`      | Z80               | B Register
-| `C'`      | Z80               | C Register
-| `D'`      | Z80               | D Register
-| `E'`      | Z80               | E Register
-| `H'`      | Z80               | H Register
-| `L'`      | Z80               | L Register
-| `AF'`     | Z80               | Register Pair AF
-| `BC'`     | Z80               | Register Pair BC
-| `DE'`     | Z80               | Register Pair DE
-| `HL'`     | Z80               | Register Pair HL
-
-\*_Shadow registers_ are not available on the Nintendo Game Boy.
-
-The following regular expressions describe valid _registers_ and _shadow registers_ including optional _hint_:
-
-_Non-shadow Registers:_
-
-```regex
-(AF?|BC?|C|DE?|E|HL?|L|I([XY][HL]?)?|R|SP)(`[A-Za-z_][A-Za-z_0-9]*)?
-```
-
-_Shadow Registers:_
-
-```regex
-(AF?|BC?|C|DE?|E|HL?|L)'([A-Za-z_][A-Za-z_0-9]*)?
-```
-
-### Condition Codes ###
-
-Some assembly instructions take a _condition code_ as a parameter that is compared with the CPU status flags. _Conditions codes_ follow the _standard tokenisation rule_ and are always lower-case (to avoid confusion with _registers_).
-
-The following keywords are reserved as _condition codes_:
-
-**NOTE:** The "CPU(s)" column refers to the following:
-
-* _"Z80"_ - Zilog [Z80], including Sharp LR35902 ([Nintendo Game Boy][gb80])
-* _"Z80*"_ - Zilog [Z80] _only_ (not on [Nintendo Game Boy][gb80])
-
-[z80]: https://en.wikipedia.org/wiki/Zilog_Z80
-[gb80]: https://en.wikipedia.org/wiki/Game_Boy
-
-| Keyword   | CPU(s)            | Description
-|-----------|-------------------|----------------------------------------------|
-| `c`       | Z80               | Carry
-| `nc`      | Z80               | No Carry
-| `z`       | Z80               | Zero
-| `nz`      | Z80               | Not Zero
-| `p`       | Z80*              | Sign Positive
-| `m`       | Z80*              | Sign Negative
-| `pe`      | Z80*              | Parity Even
-| `po`      | Z80*              | Parity Odd
-
-_Condition codes_ may also use _hints_:
-
-    ret nc`gun_loaded   ;return early if gun is already loaded
-
-The following regular expression describes a valid _condition code_ with optional _hint_:
-
-```regex
-p[eo]?|m|n?[cz](`[A-Za-z_][A-Za-z_0-9]*)?
-```
 
 ### Operators ###
 
@@ -448,87 +237,219 @@ Text Mapping
 Section pending.
 
 
-Appendix A: Atoms
+Appendix A
 ================================================================================
+
+Assembly Mnemonics
+--------------------------------------------------------------------------------
+
+Assembly language mnemonics follow the _standard tokenisation rule_. This section does not detail the allowed parameters for the numerous assembly instructions, just the keywords reserved for tokenisation.
+
+**NOTE:** The "CPU(s)" column refers to the following:
 
 * _"Z80"_ - Zilog [Z80] _only_ (not on [Nintendo Game Boy][gb80])
 * _"Z80+"_ - Zilog [Z80], including Sharp LR35902 ([Nintendo Game Boy][gb80])
-* _"Z80?"_ - Undocumented [Z80] instruction. Some Z80s only
+* _"Z80?"_ - Undocumented [Z80] Instruction. Some Z80s only
 * _"GB80"_ - Sharp LR35902 ([Nintendo Game Boy][gb80]) _only_
 * _"6502"_ - MOS Technologies / Commodore, 6502 / 6507 / 6510
-* _"6502?"_ - Undocumented 6502 instruction
 
 [z80]: https://en.wikipedia.org/wiki/Zilog_Z80
 [gb80]: https://en.wikipedia.org/wiki/Game_Boy
 
-| keyword   |      |            | Description
-|-----------|------|------------|----------------------------------------------|
-| `adc`     | Z80+ | 6502       | Add to Accumulator with Carry
-| `add`     | Z80+ |            | Add to Accumulator
-| `and`     | Z80+ | 6502       | Logical AND with Accumulator
-| `bit`     | Z80+ | 6502       | Test Bit
-| `call`    | Z80+ |            | Call Routine
-| `ccf`     | Z80+ |            | Complement (invert) Carry Flag
-| `cp`      | Z80+ |            | Compare with Accumulator
-| `cpd`     | Z80+ |            | Compare and Decrement
-| `cpdr`    | Z80+ |            | Compare, Decrement and Repeat
-| `cpi`     | Z80+ |            | Compare and Increment
-| `cpir`    | Z80+ |            | Compare, Increment and Repeat
-| `cpl`     | Z80+ |            | Complement (invert) Accumulator
-| `daa`     | Z80+ |            | Decimal Adjust Accumulator
-| `dec`     | Z80+ |            | Decrement
-| `di`      | Z80+ |            | Disable Interrupts
-| `djnz`    | Z80  |            | Decrement, Jump if Not Zero
-| `ei`      | Z80+ |            | Enable Interrupts
-| `ex`      | Z80  |            | Exchange DE and HL Registers
-| `exx`     | Z80  |            | Exchange AF / DE / HL with AF' / DE' / HL'
-| `halt`    | Z80+ |            | Halt (Wait for Interrupt)
-| `im`      | Z80+ |            | Interrupt Mode
-| `in`      | Z80  |            | Input from Port
-| `inc`     | Z80+ |            | Increment
-| `ind`     | Z80  |            | Input from Port and Decrement
-| `indr`    | Z80  |            | Input from Port, Decrement and Repeat
-| `ini`     | Z80  |            | Input from Port and Increment
-| `inir`    | Z80  |            | Input from Port, Increment and Repeat
-| `jp`      | Z80+ |            | Jump (absolute)
-| `jr`      | Z80+ |            | Jump Relative
-| `ld`      | Z80+ |            | Load
-| `ldd`     | Z80+ |            | Load and Decrement
-| `lddr`    | Z80+ |            | Load, Decrement and Repeat
-| `ldi`     | Z80+ |            | Load and Increment
-| `ldir`    | Z80+ |            | Load, Increment and Repeat
-| `neg`     | Z80+ |            | Negate Accumulator
-| `nop`     | Z80+ |            | No Operation
-| `or`      | Z80+ |            | Logical OR with Accumulator
-| `otdr`    | Z80  |            | Output to Port, Decrement and Repeat
-| `otir`    | Z80  |            | Output to Port, Increment and Repeat
-| `out`     | Z80  |            | Output to Port
-| `outd`    | Z80  |            | Output to Port and Decrement
-| `outi`    | Z80  |            | Output to Port and Increment
-| `pop`     | Z80+ |            | Pop from Stack
-| `push`    | Z80+ |            | Push to Stack
-| `res`     | Z80+ |            | Reset Bit
-| `ret`     | Z80+ |            | Return from Routine
-| `reti`    | Z80+ |            | Return from Interrupt
-| `retn`    | Z80+ |            | Return from Non-Maskable Interrupt
-| `rl`      | Z80+ |            | Rotate Operand Left
-| `rla`     | Z80+ |            | Rotate Accumulator Left
-| `rlc`     | Z80+ |            | Rotate Operand Left with Carry
-| `rlca`    | Z80+ |            | Rotate Accumulator Left with Carry
-| `rld`     | Z80+ |            | Rotate Left Decimal
-| `rr`      | Z80+ |            | Rotate Operand Right
-| `rra`     | Z80+ |            | Rotate Accumulator Right
-| `rrc`     | Z80+ |            | Rotate Operand Right with Carry
-| `rrca`    | Z80+ |            | Rotate Accumulator Right with Carry
-| `rrd`     | Z80+ |            | Rotate Right Decimal
-| `rst`     | Z80+ |            | Reset (call page zero)
-| `sbc`     | Z80+ |            | Subtract from Accumulator with Carry
-| `scf`     | Z80+ |            | Set Carry Flag
-| `set`     | Z80+ |            | Set Bit
-| `sla`     | Z80+ |            | Shift Accumulator Left
-| `sll`     | Z80? |            | Shift Operand Left (undocumented)
-| `sra`     | Z80+ |            | Shift Accumulator Right
-| `srl`     | Z80+ |            | Shift Operand Right
-| `stop`    | GB80 |            | Stop CPU
-| `sub`     | Z80+ |            | Subtract from Accumulator
-| `xor`     | Z80+ |            | Logical Exclusive-OR with Accumulator
+| keyword   | CPU(s)            | Description
+|-----------|-------------------|----------------------------------------------|
+| `adc`     | Z80+, 6502        | Add to Accumulator with Carry
+| `add`     | Z80+              | Add to Accumulator
+| `and`     | Z80+, 6502        | Logical AND with Accumulator
+| `bit`     | Z80+, 6502        | Test Bit
+| `call`    | Z80+              | Call Routine
+| `ccf`     | Z80+              | Complement (invert) Carry Flag
+| `cp`      | Z80+              | Compare with Accumulator
+| `cpd`     | Z80+              | Compare and Decrement
+| `cpdr`    | Z80+              | Compare, Decrement and Repeat
+| `cpi`     | Z80+              | Compare and Increment
+| `cpir`    | Z80+              | Compare, Increment and Repeat
+| `cpl`     | Z80+              | Complement (invert) Accumulator
+| `daa`     | Z80+              | Decimal Adjust Accumulator
+| `dec`     | Z80+              | Decrement
+| `di`      | Z80+              | Disable Interrupts
+| `djnz`    | Z80               | Decrement, Jump if Not Zero
+| `ei`      | Z80+              | Enable Interrupts
+| `ex`      | Z80               | Exchange DE and HL Registers
+| `exx`     | Z80               | Exchange AF / DE / HL with AF' / DE' / HL'
+| `halt`    | Z80+              | Halt (Wait for Interrupt)
+| `im`      | Z80+              | Interrupt Mode
+| `in`      | Z80               | Input from Port
+| `inc`     | Z80+              | Increment
+| `ind`     | Z80               | Input from Port and Decrement
+| `indr`    | Z80               | Input from Port, Decrement and Repeat
+| `ini`     | Z80               | Input from Port and Increment
+| `inir`    | Z80               | Input from Port, Increment and Repeat
+| `jp`      | Z80+              | Jump (absolute)
+| `jr`      | Z80+              | Jump Relative
+| `ld`      | Z80+              | Load
+| `ldd`     | Z80+              | Load and Decrement
+| `lddr`    | Z80+              | Load, Decrement and Repeat
+| `ldi`     | Z80+              | Load and Increment
+| `ldir`    | Z80+              | Load, Increment and Repeat
+| `neg`     | Z80+              | Negate Accumulator
+| `nop`     | Z80+              | No Operation
+| `or`      | Z80+              | Logical OR with Accumulator
+| `otdr`    | Z80               | Output to Port, Decrement and Repeat
+| `otir`    | Z80               | Output to Port, Increment and Repeat
+| `out`     | Z80               | Output to Port
+| `outd`    | Z80               | Output to Port and Decrement
+| `outi`    | Z80               | Output to Port and Increment
+| `pop`     | Z80+              | Pop from Stack
+| `push`    | Z80+              | Push to Stack
+| `res`     | Z80+              | Reset Bit
+| `ret`     | Z80+              | Return from Routine
+| `reti`    | Z80+              | Return from Interrupt
+| `retn`    | Z80+              | Return from Non-Maskable Interrupt
+| `rl`      | Z80+              | Rotate Operand Left
+| `rla`     | Z80+              | Rotate Accumulator Left
+| `rlc`     | Z80+              | Rotate Operand Left with Carry
+| `rlca`    | Z80+              | Rotate Accumulator Left with Carry
+| `rld`     | Z80+              | Rotate Left Decimal
+| `rr`      | Z80+              | Rotate Operand Right
+| `rra`     | Z80+              | Rotate Accumulator Right
+| `rrc`     | Z80+              | Rotate Operand Right with Carry
+| `rrca`    | Z80+              | Rotate Accumulator Right with Carry
+| `rrd`     | Z80+              | Rotate Right Decimal
+| `rst`     | Z80+              | Reset (call page zero)
+| `sbc`     | Z80+              | Subtract from Accumulator with Carry
+| `scf`     | Z80+              | Set Carry Flag
+| `set`     | Z80+              | Set Bit
+| `sla`     | Z80+              | Shift Accumulator Left
+| `sll`     | Z80?              | Shift Operand Left (undocumented)
+| `sra`     | Z80+              | Shift Accumulator Right
+| `srl`     | Z80+              | Shift Operand Right
+| `stop`    | GB80              | Stop CPU
+| `sub`     | Z80+              | Subtract from Accumulator
+| `xor`     | Z80+              | Logical Exclusive-OR with Accumulator
+
+Registers
+--------------------------------------------------------------------------------
+
+CPU registers for the target machine follow the _standard tokenisation rule_.
+The following keywords are reserved as registers:
+
+**NOTE:** The "CPU(s)" column refers to the following:
+
+* _"Z80"_ - Zilog [Z80] _only_ (not on [Nintendo Game Boy][gb80])
+* _"Z80+"_ - Zilog [Z80], including Sharp LR35902 ([Nintendo Game Boy][gb80])
+* _"Z80?"_ - Undocumented [Z80] Instruction. Some Z80s only
+
+[z80]: https://en.wikipedia.org/wiki/Zilog_Z80
+[gb80]: https://en.wikipedia.org/wiki/Game_Boy
+
+| Keyword   | CPU(s)            | Description
+|-----------|-------------------|----------------------------------------------|
+| `A`       | Z80+, 6502        | Accumulator
+| `B`       | Z80+              | B Register
+| `C`       | Z80+              | C Register
+| `D`       | Z80+              | D Register
+| `E`       | Z80+              | E Register
+| `H`       | Z80+              | H Register
+| `L`       | Z80+              | L Register
+| `I`       | Z80+              | Interrupt Register (unrelated to `IX` / `IY`)
+| `R`       | Z80+              | Refresh Register
+| `AF`      | Z80+              | Register Pair AF
+| `BC`      | Z80+              | Register Pair BC
+| `DE`      | Z80+              | Register Pair DE
+| `HL`      | Z80+              | Register Pair HL
+| `IX`      | Z80               | Index-X Register (16-bit)
+| `IY`      | Z80               | Index-Y Register (16-bit)
+| `IXH`     | Z80?              | Index-X Register (upper half)
+| `IXL`     | Z80?              | Index-X Register (lower half)
+| `IYH`     | Z80?              | Index-Y Register (upper half)
+| `IYL`     | Z80?              | Index-Y Register (lower half)
+| `SP`      | Z80+              | Stack Pointer
+| `X`       | 6502              | Index-X Register (8-bit)
+| `Y`       | 6502              | Index-Y Register (8-bit)
+
+All _registers_ support _hints_, a form of documentation to describe what a _register_ is being used for. A _register hint_ is appended to a _register_ keyword with a single back-tick character and a user-chosen arbitrary descriptor consisting of any combination of letters A-Z (uppercase), a-z (lowercase), "`_`" (underscore) and numerals 0-9 with the one exception that it may not begin with a numeral.
+
+    HL`width        ;documents that register HL currently holds a width value
+    HL `width       ;ERROR: separation between register and hint disallowed
+
+The _hint_ is purely descriptive and does not affect assembly. A different _hint_ can be used for every _register_ use to document the changing role of the _register_ in your assembly code.
+
+_Shadow registers_ are secondary _registers_ in a CPU not normally accessible by their own name, instead an assembly instruction swaps the contents of an existing _register_ with its shadow counterpart. It is useful to keep track of this swapping happening and a different form of _register hint_ is provided to do this.
+
+    AF'flags        ;the shadow version of AF is in play
+    AF'             ;the hint descriptor is optional for shadow hints
+
+    AF'`flags       ;this is not valid
+    AD`'flags       ;neither is this
+
+    ex AF  AF'      ;Z80 code to swap to AF shadow register
+    ex AF' AF       ;Z80 code to swap back to original contents
+
+The use of _shadow hints_ are valid only on _registers_ that support them, namely:
+
+| Keyword   | CPU(s)            | Description
+|-----------|-------------------|----------------------------------------------|
+| `A'`      | Z80               | Accumulator
+| `B'`      | Z80               | B Register
+| `C'`      | Z80               | C Register
+| `D'`      | Z80               | D Register
+| `E'`      | Z80               | E Register
+| `H'`      | Z80               | H Register
+| `L'`      | Z80               | L Register
+| `AF'`     | Z80               | Register Pair AF
+| `BC'`     | Z80               | Register Pair BC
+| `DE'`     | Z80               | Register Pair DE
+| `HL'`     | Z80               | Register Pair HL
+
+\*_Shadow registers_ are not available on the Nintendo Game Boy.
+
+The following regular expressions describe valid _registers_ and _shadow registers_ including optional _hint_:
+
+_Non-shadow Registers:_
+
+```regex
+(AF?|BC?|C|DE?|E|HL?|L|I([XY][HL]?)?|R|SP)(`[A-Za-z_][A-Za-z_0-9]*)?
+```
+
+_Shadow Registers:_
+
+```regex
+(AF?|BC?|C|DE?|E|HL?|L)'([A-Za-z_][A-Za-z_0-9]*)?
+```
+
+Condition Codes
+--------------------------------------------------------------------------------
+
+Some assembly instructions take a _condition code_ as a parameter that is compared with the CPU status flags. _Conditions codes_ follow the _standard tokenisation rule_ and are always lower-case (to avoid confusion with _registers_).
+
+The following keywords are reserved as _condition codes_:
+
+**NOTE:** The "CPU(s)" column refers to the following:
+
+* _"Z80"_ - Zilog [Z80], including Sharp LR35902 ([Nintendo Game Boy][gb80])
+* _"Z80*"_ - Zilog [Z80] _only_ (not on [Nintendo Game Boy][gb80])
+
+[z80]: https://en.wikipedia.org/wiki/Zilog_Z80
+[gb80]: https://en.wikipedia.org/wiki/Game_Boy
+
+| Keyword   | CPU(s)            | Description
+|-----------|-------------------|----------------------------------------------|
+| `c`       | Z80               | Carry
+| `nc`      | Z80               | No Carry
+| `z`       | Z80               | Zero
+| `nz`      | Z80               | Not Zero
+| `p`       | Z80*              | Sign Positive
+| `m`       | Z80*              | Sign Negative
+| `pe`      | Z80*              | Parity Even
+| `po`      | Z80*              | Parity Odd
+
+_Condition codes_ may also use _hints_:
+
+    ret nc`gun_loaded   ;return early if gun is already loaded
+
+The following regular expression describes a valid _condition code_ with optional _hint_:
+
+```regex
+p[eo]?|m|n?[cz](`[A-Za-z_][A-Za-z_0-9]*)?
+```

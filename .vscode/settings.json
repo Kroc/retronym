@@ -1,5 +1,9 @@
 // Place your settings in this file to overwrite default and user settings.
 {
+    "editor.wordWrapColumn": 80,
+    "editor.rulers": [
+        80
+    ],
     "[markdown]": {
         "editor.tabSize": 4,
         "editor.wordWrap": "bounded",
@@ -14,5 +18,9 @@
         "MD003": {
             "style": "setext_with_atx_closed"
         }
+    },
+    "files.exclude": {
+        "target/": true,
+        "Cargo.lock": true
     }
 }

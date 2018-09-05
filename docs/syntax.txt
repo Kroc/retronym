@@ -3,7 +3,7 @@
 
     atom                        ;a single unique word; it has no associated value, only uniqueness
 
-    'CONST                      ;constant?
+    CONST                       ;constant?
 
     $FFFF                       ;hexadecimal number
 

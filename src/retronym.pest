@@ -1,7 +1,64 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-alpha = { 'a'..'z' | 'A'..'Z' }
-digit = { '0'..'9' }
+// retronym requires an indent to distinguish between a definition
+// (such as labels) and the recall of a value, making the language
+// whitespace-aware somewhat like python. therefore, the `whitespace`
+// rule is defined without new-line and we manage that separately
 
-atom = { alpha ~ digit* }
+whitespace = _{ " " | "\t" }
+
+comment = { ";" ~ (!newline ~ any)* ~ newline }
+
+// support either CRLF or LF, but don't take CRLF to be two new-lines.
+// we want to capture newlines so that we check for immediate indentation
+
+newline = @{ "\r"? ~ "\n" }
+
+//==============================================================================
+
+rym = { soi ~ ( newline+ | comment | newline | root )* ~ eoi }
+
+root            = @{ whitespace* ~ atom }
+
+alpha           = _{ 'a'..'z' | 'A'..'Z' }
+alpha_num       = _{ 'a'..'z' | 'A'..'Z' | '0'..'9' }
+alpha_num_un    = _{ 'a'..'z' | 'A'..'Z' | '0'..'9' | "_" } 
+digit           = _{ '0'..'9' }
+digit_leading   = _{ '1'..'9' }
+digit_hex       = _{ '0'..'9' | 'a'..'f' | 'A'..'F' }
+digit_bin       = _{ '0'..'1' }
+
+// an integer [decimal] number uses digits "0"-"9" but cannot begin with "0"
+// TODO: negative integers
+
+int_number = @{digit_leading ~ digit* }
+
+// a hexadecimal number uses a "$" sigil, followed by up to 32 hexadecimals
+// TODO: some kind of separator for very large hex numbers?
+
+hex_number = @{ "$" ~ digit_hex{1,32} }
+
+// a binary number uses a "%" sigil, followed by up to 64 binary decimals
+
+bin_number = @{ "%" ~ digit_bin{1,64} }
+
+number = { int_number | hex_number | bin_number }
+
+operator = { "," | "+" | "-" | "*" | "/" | "^" | "&" | "|" | "#" | "(" | ")" }
+
+//------------------------------------------------------------------------------
+
+// an atom consists of a-z, 0-9,
+// but cannot begin with a number
+
+atom            = @{ alpha ~ alpha_num* }
+
+id              = @{ alpha ~ alpha_num_un* }
+
+label           = @{ ":" ~ id }
+
+attribute       = @{ "@" ~ id }
+
+structure       = @{ "%" ~ id }
+
