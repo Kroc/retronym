@@ -23,3 +23,6 @@
 
     "a string"
     
+
+    Useful article on ternary operators:
+    https://dev.to/mortoray/we-dont-need-a-ternary-operator-309n

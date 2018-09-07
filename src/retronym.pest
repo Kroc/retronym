@@ -33,7 +33,9 @@ root            = !{ whitespace* ~ list }
 // commas are optional
 list            = _{ expr ~ ","? ~ list? }
 
-expr            = _{ number | atom }
+expr            = _{ value ~ ( operator ~ value )? }
+
+value           = _{ number | atom }
 
 //==============================================================================
 
@@ -49,25 +51,25 @@ digit_bin       = _{ '0'..'1' }
 // TODO: negative integers
 // TODO: float numbers
 
-int_number = @{digit_leading ~ digit* }
+int_number      = @{ digit_leading ~ digit* }
 
 // a hexadecimal number uses a "$" sigil, followed by up to 32 hexadecimals
 // TODO: some kind of separator for very large hex numbers?
 
-hex_number = @{ "$" ~ digit_hex{1,32} }
+hex_number      = @{ "$" ~ digit_hex{1,32} }
 
 // a binary number uses a "%" sigil, followed by up to 64 binary decimals
 
-bin_number = @{ "%" ~ digit_bin{1,64} }
+bin_number      = @{ "%" ~ digit_bin{1,64} }
 
 // this rule is silent as we will parse the specific type of number
 // (dec, bin, hex) rather than this top-level token
 
-number = _{ int_number | hex_number | bin_number }
+number          = _{ int_number | hex_number | bin_number }
 
 // TODO: these are not all operators yet; pending more rules
 
-operator = { "," | "+" | "-" | "*" | "/" | "^" | "&" | "|" | "#" | "(" | ")" }
+operator        = { "+" | "-" | "*" | "/" | "^" | "&" | "|" | ">>" | "<<" }
 
 //------------------------------------------------------------------------------
 

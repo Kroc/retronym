@@ -5,9 +5,9 @@ extern crate pest;
 #[macro_use]
 extern crate pest_derive;
 
-use std::io::{self, Write};
-use pest::Parser;
 use pest::iterators::Pairs;
+use pest::Parser;
+use std::io::{self, Write};
 
 // force the Rust compiler to acknowlege external changes to the grammer file
 // (this is recommended to do by Pest)
@@ -19,7 +19,6 @@ const _GRAMMAR: &'static str = include_str!("retronym.pest");
 struct RymParser;
 
 fn main() {
-
     // display REPL header
     println!("");
     println!("Retronym (C) copryright Kroc Camen 2017, 2018");
@@ -45,7 +44,7 @@ fn main() {
         // parse the line given
         match RymParser::parse(Rule::root, &line) {
             Ok(pairs) => dump_pairs(pairs),
-            Err(e) => println!("\n{}", e)
+            Err(e) => println!("\n{}", e),
         };
     }
 }
@@ -61,13 +60,14 @@ fn dump_pairs(pairs: Pairs<Rule>) {
             println!("= {:?}", inner_pair.as_rule());
 
             let inner_span = inner_pair.clone().into_span();
-            println!("  \"{}\"", inner_span.as_str());
-            
-            /*match inner_pair.as_rule() {
-                Rule::alpha => println!("Letter:  {}", inner_span.as_str()),
-                Rule::digit => println!("Digit:   {}", inner_span.as_str()),
-                _ => unreachable!()
-            };*/
+
+            match inner_pair.as_rule() {
+                Rule::atom => println!("atom: {}", inner_span.as_str()),
+                Rule::int_number => println!("int:  {}", inner_span.as_str()),
+                Rule::bin_number => println!("bin:  {}", inner_span.as_str()),
+                Rule::hex_number => println!("hex:  {}", inner_span.as_str()),
+                _ => println!("  \"{}\"", inner_span.as_str()),
+            };
         }
     }
-} 
+}
