@@ -18,7 +18,7 @@ newline         = @{ "\r"? ~ "\n" }
 // outline:
 //==============================================================================
 
-rym             = { soi ~ ( newline | comment | root )* ~ eoi }
+rym             = _{ soi ~ ( newline | comment | root )* ~ eoi }
 
 // each line can be only one of two kinds:
 // (excluding blank and comment lines)
@@ -33,7 +33,7 @@ root            = !{ whitespace* ~ list }
 // commas are optional
 list            = _{ expr ~ ","? ~ list? }
 
-expr            = _{ value ~ ( operator ~ value )? }
+expr            = _{ value ~ ( operator ~ expr )? }
 
 value           = _{ number | atom }
 
@@ -67,9 +67,32 @@ bin_number      = @{ "%" ~ digit_bin{1,64} }
 
 number          = _{ int_number | hex_number | bin_number }
 
-// TODO: these are not all operators yet; pending more rules
+operator        = _{
+                    op_pow |
+                    op_add | op_sub | op_mul | op_div | op_mod |
+                    op_xor | op_and | op_or | op_shl | op_shr
+                }
 
-operator        = { "+" | "-" | "*" | "/" | "^" | "&" | "|" | ">>" | "<<" }
+//TODO: repeat: "x" (is this even an operator?)
+//      range:  ".." / "..."
+//      rolls?  "<<<" / ">>>"
+//      not:    "!"? (overused), perhaps "~" instead?
+//              big question regarding number of bits; require an operand?
+//              e.g. "$FFFF ~ 16"
+
+op_pow          = { "**" }  // power/exponention
+
+op_add          = { "+" }   // add
+op_sub          = { "-" }   // subtract
+op_mul          = { "*" }   // multiply
+op_div          = { "/" }   // divide
+op_mod          = { "\\" }  // modulo (usually "%", already used though)
+
+op_xor          = { "^" }   // exclusive-or
+op_and          = { "&" }   // and
+op_or           = { "|" }   // or
+op_shl          = { "<<" }  // shift-left
+op_shr          = { ">>" }  // shift-right
 
 //------------------------------------------------------------------------------
 
