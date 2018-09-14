@@ -32,8 +32,6 @@ fn main() {
 
         // get user input
         io::stdin().read_line(&mut line).unwrap();
-//        // (throw away the carriage-return)
-//        line.pop();
 
         // parse the line given
         match Tokenizer::tokenize_str(&line) {

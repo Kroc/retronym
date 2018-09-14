@@ -1,7 +1,7 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use pest::iterators::Pairs;
+//use pest::iterators::Pairs;
 use pest::Parser;
 use std::error::Error;
 use std::fs;
@@ -41,7 +41,7 @@ impl Tokenizer {
     /// Generate a new `Tokenizer` and populate it
     /// from the given source-code file.
     pub fn tokenize_file(filepath: &str) -> Result<Tokenizer, Box<Error>> {
-        let tokenizer = Tokenizer {
+        let mut tokenizer = Tokenizer {
             // copy the given file-name, so as to not keep the string
             // reference alive along with this object
             filepath: filepath.to_string(),
@@ -51,7 +51,7 @@ impl Tokenizer {
         };
 
         tokenizer.tokenize();
-        
+
         // return the Tokenizer we've created
         Ok(tokenizer)
     }
@@ -59,7 +59,7 @@ impl Tokenizer {
     /// Generate a new `Tokenizer` and populate it
     /// from the string input given.
     pub fn tokenize_str(input: &str) -> Result<Tokenizer, Box<Error>> {
-        let tokenizer = Tokenizer {
+        let mut tokenizer = Tokenizer {
             // filename is blank to indicate no file-binding
             filepath: "".to_string(),
             source: input.to_string(),
@@ -72,29 +72,34 @@ impl Tokenizer {
         Ok(tokenizer)
     }
 
-    fn tokenize(&self) {
+    fn tokenize(&mut self) {
         let pairs = RymParser::parse(Rule::rym, &self.source).unwrap();
-        dump_pairs(pairs);
-    }
-}
 
-// pretty print the contents of Pairs.
-// I'm sure we can implement the Debug trait to do this more cleanly,
-// but I don't know how to do that just yet
-fn dump_pairs(pairs: Pairs<Rule>) {
-    // loop over our Pairs
-    for pair in pairs.flatten() {
-        // a pair can be converted to an iterator of the tokens which make it up:
-        for inner_pair in pair.into_inner() {
-            //println!("= {:?}", inner_pair.as_rule());
+        // loop over our Pairs
+        for pair in pairs.flatten() {
+            for inner_pair in pair.into_inner() {
+                let inner_span = inner_pair.clone().into_span();
 
-            let inner_span = inner_pair.clone().into_span();
-
-            println!(
-                "= {:16}: \"{}\"",
-                format!("{:?}", inner_pair.as_rule()),
-                inner_span.as_str()
-            );
+                self.tokens.push(match inner_pair.as_rule() {
+                    Rule::atom => token::Token {
+                        kind: token::TokenType::Atom(inner_span.as_str().to_string()),
+                        line: 0,
+                        col: 0,
+                    },
+                    Rule::int_number => token::Token {
+                        kind: token::TokenType::Num(token::TokenTypeNumber::TokenInt(
+                            inner_span.as_str().parse().unwrap(),
+                        )),
+                        line: 0,
+                        col: 0,
+                    },
+                    _ => token::Token {
+                        kind: token::TokenType::Atom(inner_span.as_str().to_string()),
+                        line: 0,
+                        col: 0,
+                    },
+                });
+            }
         }
     }
 }
