@@ -7,12 +7,12 @@
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
-
+/// We're using Pest as our parser and don't need to expose this as our own
 mod parser;
 
 pub mod repl;
 pub mod token;
-pub mod tokenizer;
+pub mod tokenstream;
 
 use std::io;
 use std::io::Write;

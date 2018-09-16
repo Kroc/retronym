@@ -1,7 +1,7 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use tokenizer::Tokenizer;
+use tokenstream;
 use std::io;
 use std::io::Write;
 
@@ -23,9 +23,6 @@ pub fn repl() {
         io::stdin().read_line(&mut line).unwrap();
 
         // parse the line given
-        match Tokenizer::tokenize_str(&line) {
-            Ok(_) => (),
-            Err(e) => println!("\n{}", e),
-        }
+        tokenstream::TokenStream::from(&line);
     }
 }
