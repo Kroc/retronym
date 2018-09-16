@@ -1,0 +1,5 @@
+# https://github.com/rust-lang-nursery/rustfmt/blob/master/Configurations.md
+# set the Rust formatter to use the same 80-columns as we do
+max_width = 80
+wrap_comments = true
+comment_width = 80

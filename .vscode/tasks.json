@@ -12,7 +12,11 @@
             ],
             "problemMatcher": [
                 "$rustc"
-            ]
+            ],
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated",
+            }
         },
         {
             "type": "cargo",
@@ -28,6 +32,6 @@
                 "kind": "build",
                 "isDefault": true
             }
-        }
+        },
     ]
 }

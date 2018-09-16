@@ -51,7 +51,7 @@ digit_bin       = _{ '0'..'1' }
 // TODO: negative integers
 // TODO: float numbers
 
-int_number      = @{ digit_leading ~ digit* }
+int_number      = @{ "-"? ~ digit_leading ~ digit* }
 
 // a hexadecimal number uses a "$" sigil, followed by up to 32 hexadecimals
 // TODO: some kind of separator for very large hex numbers?

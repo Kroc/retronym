@@ -1,20 +1,12 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-//use pest::iterators::Pairs;
+use parser::Rule;
+use parser::RymParser;
 use pest::Parser;
 use std::error::Error;
 use std::fs;
 use token;
-
-// force the Rust compiler to acknowlege external changes to the grammer file
-// (this is recommended to do by Pest)
-#[cfg(debug_assertions)]
-const _GRAMMAR: &'static str = include_str!("retronym.pest");
-
-#[derive(Parser)]
-#[grammar = "retronym.pest"]
-struct RymParser;
 
 //------------------------------------------------------------------------------
 
@@ -78,27 +70,10 @@ impl Tokenizer {
         // loop over our Pairs
         for pair in pairs.flatten() {
             for inner_pair in pair.into_inner() {
-                let inner_span = inner_pair.clone().into_span();
-
-                self.tokens.push(match inner_pair.as_rule() {
-                    Rule::atom => token::Token {
-                        kind: token::TokenType::Atom(inner_span.as_str().to_string()),
-                        line: 0,
-                        col: 0,
-                    },
-                    Rule::int_number => token::Token {
-                        kind: token::TokenType::Num(token::TokenTypeNumber::TokenInt(
-                            inner_span.as_str().parse().unwrap(),
-                        )),
-                        line: 0,
-                        col: 0,
-                    },
-                    _ => token::Token {
-                        kind: token::TokenType::Atom(inner_span.as_str().to_string()),
-                        line: 0,
-                        col: 0,
-                    },
-                });
+                //let inner_span = inner_pair.clone().into_span();
+                let token = token::Token::from(inner_pair);
+                println!("{:?}", token);
+                self.tokens.push(token);
             }
         }
     }
