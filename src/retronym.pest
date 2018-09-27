@@ -29,15 +29,24 @@ rym             = _{ soi ~ ( newline | comment | root )* ~ eoi }
 //TODO: make the indent/no-indent split
 root            = !{ whitespace* ~ list }
 
-// almost everything in Retronym is an implicit list,
-// commas are optional
-list            = _{ expr ~ ","? ~ list? }
+// almost everything in Retronym is an implicit list, commas are optional.
+// for example, strings are self-contained lists of bytes
+list            = _{ ( string | listexpr ) ~ ","? ~ list? }
+
+// a list of expressions (single values)
+listexpr        = _{ expr ~ ( ","? ~ listexpr )?  }
 
 expr            = _{ value ~ ( operator ~ expr )? }
 
-value           = _{ number | atom }
+value           = _{ atom | name | number | deref }
 
 //==============================================================================
+
+// strings are obviously wrapped by speech-marks
+// but Retronym does not allow for escape codes
+string          = @{ "\"" ~ text ~ "\"" }
+
+text            = @{ (!"\"" ~ any)* }
 
 alpha           = _{ 'a'..'z' | 'A'..'Z' }
 alpha_num       = _{ 'a'..'z' | 'A'..'Z' | '0'..'9' }
@@ -68,9 +77,17 @@ bin_number      = @{ "%" ~ digit_bin{1,64} }
 number          = _{ int_number | hex_number | bin_number }
 
 operator        = _{
+                    // we look for power/exponention first as it's
+                    // double-asterisk and we don't want to confuse
+                    // it with multiply first
                     op_pow |
                     op_add | op_sub | op_mul | op_div | op_mod |
-                    op_xor | op_and | op_or | op_shl | op_shr
+                    op_xor | op_and | op_or | op_shl | op_shr |
+
+                    // the repeat operator is not a typical operator
+                    // as it builds lists, but we'll handle that
+                    // distinction at the AST level
+                    op_rep
                 }
 
 //TODO: repeat: "x" (is this even an operator?)
@@ -94,12 +111,16 @@ op_or           = { "|" }   // or
 op_shl          = { "<<" }  // shift-left
 op_shr          = { ">>" }  // shift-right
 
+
+op_rep          = { "x" }   // repeat (for building a list)
+
 //------------------------------------------------------------------------------
 
 // an atom is a "keyword", this predominantly includes assembly mnemonics.
 // an atom consists of a-z, 0-9, but cannot begin with a number
-
 atom            = @{ alpha ~ alpha_num* }
+
+name            = @{ label | attribute | structure }
 
 id              = @{ alpha ~ alpha_num_un* }
 
@@ -109,3 +130,9 @@ attribute       = @{ "@" ~ id }
 
 structure       = @{ "%" ~ id }
 
+// dereference (operator?)
+//------------------------------------------------------------------------------
+
+deref           = _{ deref_begin ~ expr ~ deref_end }
+deref_begin     = { "[" }
+deref_end       = { "]" }

@@ -10,6 +10,9 @@ extern crate pest_derive;
 /// We're using Pest as our parser and don't need to expose this as our own
 mod parser;
 
+#[macro_use]
+extern crate errln;
+
 pub mod repl;
 pub mod token;
 pub mod tokenstream;

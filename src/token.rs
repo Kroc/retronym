@@ -3,6 +3,15 @@
 
 use parser::Rule;
 use pest::iterators::Pair;
+use std::error::Error;
+
+/// Allow a type conversion to return a potential error;
+/// this is not on stable Rust yet.
+pub trait TryFrom<T, Err: Error>: Sized {
+    type Err;
+
+    fn try_from(t: T) -> Result<Self, Self::Err>;
+}
 
 /// A `Token` is a machine-understandable representation of one 'word'
 /// (or "lexeme") of the original source code.
@@ -15,10 +24,15 @@ pub struct Token {
 
 #[derive(Debug)]
 pub enum TokenKind {
+    /// Internally used for skipping sub-tokens and finding errors
+    None,
+
     Atom(String),
     Str(String),
     Num(TokenKindNumber),
     Op(TokenKindOperator),
+    Deref(TokenKindDeref),
+    Label(String),
 }
 
 #[derive(Debug)]
@@ -58,6 +72,14 @@ pub enum TokenKindOperator {
     Shl,
     /// Bitwise SHift-Right operator ">>"
     Shr,
+    /// Repeat operator "x"
+    Rep,
+}
+
+#[derive(Debug)]
+pub enum TokenKindDeref {
+    Begin,
+    End,
 }
 
 /// Allow the direct conversion of Pest's `Pair`s into our `Token`s.
@@ -80,10 +102,17 @@ impl<'i> From<Pair<'i, Rule>> for Token {
     }
 }
 
-impl<'i> From<Pair<'i, Rule>> for TokenKind {
-    fn from(pair: Pair<'i, Rule>) -> Self {
-        match pair.as_rule() {
+impl<'i, E: Error> TryFrom<Pair<'i, Rule>, E> for TokenKind {
+    type Err = E;
+
+    fn try_from(pair: Pair<'i, Rule>) -> Result<Self, Self::Err> {
+        let token_kind = match pair.as_rule() {
             Rule::atom => TokenKind::Atom(pair.to_string()),
+
+            Rule::string => TokenKind::Str(pair.to_string()),
+
+            Rule::label => TokenKind::Label(pair.to_string()),
+
             Rule::int_number => TokenKind::Num(TokenKindNumber::Int(
                 pair.as_str().parse::<i64>().unwrap(),
             )),
@@ -102,6 +131,7 @@ impl<'i> From<Pair<'i, Rule>> for TokenKind {
                     2, //=binary
                 ).unwrap(),
             )),
+
             Rule::op_add => TokenKind::Op(TokenKindOperator::Add),
             Rule::op_sub => TokenKind::Op(TokenKindOperator::Sub),
             Rule::op_mul => TokenKind::Op(TokenKindOperator::Mul),
@@ -113,6 +143,62 @@ impl<'i> From<Pair<'i, Rule>> for TokenKind {
             Rule::op_or => TokenKind::Op(TokenKindOperator::Or),
             Rule::op_shl => TokenKind::Op(TokenKindOperator::Shl),
             Rule::op_shr => TokenKind::Op(TokenKindOperator::Shr),
+            Rule::op_rep => TokenKind::Op(TokenKindOperator::Rep),
+
+            Rule::deref_begin => TokenKind::Deref(TokenKindDeref::Begin),
+            Rule::deref_end => TokenKind::Deref(TokenKindDeref::End),
+
+            _ => TokenKind::None,
+        };
+
+        Ok(token_kind)
+    }
+}
+
+impl<'i> From<Pair<'i, Rule>> for TokenKind {
+    fn from(pair: Pair<'i, Rule>) -> Self {
+        match pair.as_rule() {
+            Rule::atom => TokenKind::Atom(pair.to_string()),
+
+            Rule::string => TokenKind::Str(pair.to_string()),
+
+            Rule::label => TokenKind::Label(pair.to_string()),
+
+            Rule::int_number => TokenKind::Num(TokenKindNumber::Int(
+                pair.as_str().parse::<i64>().unwrap(),
+            )),
+            Rule::hex_number => TokenKind::Num(TokenKindNumber::Hex(
+                // create an unsigned 64-bit Int from a string...
+                u64::from_str_radix(
+                    // ignore the first character ("$")
+                    &pair.as_str()[1..],
+                    16, //=hexadecimal
+                ).unwrap(),
+            )),
+            Rule::bin_number => TokenKind::Num(TokenKindNumber::Bin(
+                u64::from_str_radix(
+                    // ignore the first character ("%")
+                    &pair.as_str()[1..],
+                    2, //=binary
+                ).unwrap(),
+            )),
+            
+            Rule::op_add => TokenKind::Op(TokenKindOperator::Add),
+            Rule::op_sub => TokenKind::Op(TokenKindOperator::Sub),
+            Rule::op_mul => TokenKind::Op(TokenKindOperator::Mul),
+            Rule::op_div => TokenKind::Op(TokenKindOperator::Div),
+            Rule::op_mod => TokenKind::Op(TokenKindOperator::Mod),
+            Rule::op_pow => TokenKind::Op(TokenKindOperator::Pow),
+            Rule::op_xor => TokenKind::Op(TokenKindOperator::Xor),
+            Rule::op_and => TokenKind::Op(TokenKindOperator::And),
+            Rule::op_or => TokenKind::Op(TokenKindOperator::Or),
+            Rule::op_shl => TokenKind::Op(TokenKindOperator::Shl),
+            Rule::op_shr => TokenKind::Op(TokenKindOperator::Shr),
+            Rule::op_rep => TokenKind::Op(TokenKindOperator::Rep),
+
+            Rule::deref_begin => TokenKind::Deref(TokenKindDeref::Begin),
+            Rule::deref_end => TokenKind::Deref(TokenKindDeref::End),
+
             _ => TokenKind::Atom(pair.to_string()),
         }
     }

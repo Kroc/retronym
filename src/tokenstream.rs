@@ -13,13 +13,15 @@ pub struct TokenStream(Vec<token::Token>);
 
 impl TokenStream {
     fn tokenize(source: String) -> Self {
-
         let mut tokens = TokenStream(Vec::new());
 
-        let pairs = RymParser::parse(Rule::rym, &source).unwrap();
+        let pairs = RymParser::parse(Rule::rym, &source);
+        if pairs.is_err() {
+            panic!("error parsing: {:#?}", pairs.err().unwrap());
+        }
 
         // loop over our Pairs
-        for pair in pairs.flatten() {
+        for pair in pairs.unwrap().flatten() {
             for inner_pair in pair.into_inner() {
                 //let inner_span = inner_pair.clone().into_span();
                 let token = token::Token::from(inner_pair);
