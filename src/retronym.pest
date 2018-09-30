@@ -8,17 +8,15 @@
 
 whitespace      = _{ " " | "\t" }
 
-comment         = _{ ";" ~ (!newline ~ any)* ~ newline }
+comment         = _{ ";" ~ ( !NEWLINE ~ ANY )* ~ NEWLINE }
 
 // support either CRLF or LF, but don't take CRLF to be two new-lines.
 // we want to capture newlines so that we check for immediate indentation
 
-newline         = @{ "\r"? ~ "\n" }
-
 // outline:
 //==============================================================================
 
-rym             = _{ soi ~ ( newline | comment | root )* ~ eoi }
+rym             = _{ SOI ~ ( NEWLINE | comment | root )* ~ EOI }
 
 // each line can be only one of two kinds:
 // (excluding blank and comment lines)
@@ -46,30 +44,24 @@ value           = _{ atom | name | number | deref }
 // but Retronym does not allow for escape codes
 string          = @{ "\"" ~ text ~ "\"" }
 
-text            = @{ (!"\"" ~ any)* }
+text            = @{ ( !"\"" ~ ANY )* }
 
-alpha           = _{ 'a'..'z' | 'A'..'Z' }
-alpha_num       = _{ 'a'..'z' | 'A'..'Z' | '0'..'9' }
-alpha_num_un    = _{ 'a'..'z' | 'A'..'Z' | '0'..'9' | "_" } 
-digit           = _{ '0'..'9' }
-digit_leading   = _{ '1'..'9' }
-digit_hex       = _{ '0'..'9' | 'a'..'f' | 'A'..'F' }
-digit_bin       = _{ '0'..'1' }
+alpha_num_un    = _{ ASCII_ALPHANUMERIC | "_" } 
 
 // an integer [decimal] number uses digits "0"-"9" but cannot begin with "0"
 // TODO: negative integers
 // TODO: float numbers
 
-int_number      = @{ "-"? ~ digit_leading ~ digit* }
+int_number      = @{ "-"? ~ ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* }
 
 // a hexadecimal number uses a "$" sigil, followed by up to 32 hexadecimals
 // TODO: some kind of separator for very large hex numbers?
 
-hex_number      = @{ "$" ~ digit_hex{1,32} }
+hex_number      = @{ "$" ~ ASCII_HEX_DIGIT{1,32} }
 
 // a binary number uses a "%" sigil, followed by up to 64 binary decimals
 
-bin_number      = @{ "%" ~ digit_bin{1,64} }
+bin_number      = @{ "%" ~ ASCII_BIN_DIGIT{1,64} }
 
 // this rule is silent as we will parse the specific type of number
 // (dec, bin, hex) rather than this top-level token
@@ -118,11 +110,11 @@ op_rep          = { "x" }   // repeat (for building a list)
 
 // an atom is a "keyword", this predominantly includes assembly mnemonics.
 // an atom consists of a-z, 0-9, but cannot begin with a number
-atom            = @{ alpha ~ alpha_num* }
+atom            = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
 
 name            = @{ label | attribute | structure }
 
-id              = @{ alpha ~ alpha_num_un* }
+id              = @{ ASCII_ALPHA ~ alpha_num_un* }
 
 label           = @{ ":" ~ id }
 

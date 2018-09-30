@@ -4,15 +4,21 @@
 //! Retronym is a thoroughly modern assembler for retro consoles
 //! and computer systems.
 
+// Pest:
+//------------------------------------------------------------------------------
+
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
 /// We're using Pest as our parser and don't need to expose this as our own
 mod parser;
 
-#[macro_use]
-extern crate errln;
+//#[macro_use]
+//extern crate errln;
 
+//==============================================================================
+
+pub mod error;
 pub mod repl;
 pub mod token;
 pub mod tokenstream;
