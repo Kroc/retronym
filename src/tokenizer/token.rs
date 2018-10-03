@@ -4,17 +4,7 @@
 use parser::Rule;
 use pest::iterators::Pair;
 use std::error::Error;
-
-type BoxError = Box<Error>;
-type BoxResult<T> = Result<T, Box<Error>>;
-
-/// Allow a type conversion to return a potential error;
-/// this is not on stable Rust yet.
-pub trait TryFrom<T>: Sized {
-    //type Err;
-
-    fn try_from(t: T) -> BoxResult<Self>;
-}
+use ::error::TryFrom_;
 
 /// A `Token` is a machine-understandable representation of one 'word'
 /// (or "lexeme") of the original source code.
@@ -25,11 +15,16 @@ pub struct Token {
     pub col: u32,
 }
 
+/// As the source code is broken into `Token`s, we assign what "kind" each is
+/// via an enum, so that the assembler can work with strict type information
+/// rather than having to continually look at ASCII-codes.
 #[derive(Debug)]
 pub enum TokenKind {
-    /// Internally used for skipping sub-tokens and finding errors
+    /// Internally used for skipping sub-tokens and finding errors.
     None,
 
+    /// Atoms are the language "keywords" but also encompase the large number
+    /// of assembly mnemonics and CPU registers as these don't have sigils.
     Atom(String),
     Str(String),
     Num(TokenKindNumber),
@@ -87,36 +82,58 @@ pub enum TokenKindDeref {
 
 /// Allow the direct conversion of Pest's `Pair`s into our `Token`s.
 /// This removes a lot of logic from walking the `Pair`s.
-impl<'i> From<Pair<'i, Rule>> for Token {
-    fn from(pair: Pair<'i, Rule>) -> Self {
+impl<'i> TryFrom_<Pair<'i, Rule>> for Token {
+    fn try_from_(pair: Pair<'i, Rule>) -> Result<Self, Box<Error>> {
         // get the starting position of the token for line / col number;
         // this will get passed all the way through even the AST so that
         // accurate error information can be given even late into assembling
         let span = pair.clone().into_span();
         let start = span.start_pos();
-        //TODO: is this very costly? should we defer this until called?
+        // TODO: is this very costly? should we defer this until called?
         let (line, col) = start.line_col();
 
-        Token {
-            kind: TokenKind::try_from(&pair).unwrap(),
+        Ok(Token {
+            kind: TokenKind::try_from_(&pair)?,
             line: line as u32,
             col: col as u32,
+        })
+    }
+}
+
+impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for i64 {
+    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self, Box<Error>> {
+        match pair.as_str().parse::<i64>() {
+            // FIXME: Match parse error specifically?
+            Err(e) => Err(Box::new(e)),
+            Ok(i) => Ok(i),
         }
     }
 }
 
-// Attempt conversion of Pest's `Pair`s into our `Token`s.
-impl<'p, 'i> TryFrom<&'p Pair<'i, Rule>> for TokenKind {
-    fn try_from(pair: &'p Pair<'i, Rule>) -> Result<Self, BoxError> {
+impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for u64 {
+    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self, Box<Error>> {
+        match pair.as_rule() {
+            Rule::int_number => match pair.as_str().parse::<u64>() {
+                // FIXME: Match parse error specifically?
+                Err(e) => Err(Box::new(e)),
+                Ok(i) => Ok(i),
+            },
+            _ => panic!("It's a lion, get in the car!"),
+        }
+    }
+}
+
+impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for TokenKind {
+    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self, Box<Error>> {
         let token_kind = match pair.as_rule() {
             Rule::atom => TokenKind::Atom(pair.to_string()),
 
             Rule::string => TokenKind::Str(pair.to_string()),
 
-            Rule::label => TokenKind::Label(pair.to_string()),
-
             Rule::int_number => TokenKind::Num(TokenKindNumber::Int(
-                pair.as_str().parse::<i64>().unwrap(),
+                // attempt to convert the `Pair` to an i64,
+                // if it fails, the error will propogate upwards
+                i64::try_from_(pair)?,
             )),
             Rule::hex_number => TokenKind::Num(TokenKindNumber::Hex(
                 // create an unsigned 64-bit Int from a string...
@@ -124,15 +141,15 @@ impl<'p, 'i> TryFrom<&'p Pair<'i, Rule>> for TokenKind {
                     // ignore the first character ("$")
                     &pair.as_str()[1..],
                     16, //=hexadecimal
-                ).unwrap(),
+                )?,
             )),
-            Rule::bin_number => TokenKind::Num(TokenKindNumber::Bin(
-                u64::from_str_radix(
+            Rule::bin_number => {
+                TokenKind::Num(TokenKindNumber::Bin(u64::from_str_radix(
                     // ignore the first character ("%")
                     &pair.as_str()[1..],
                     2, //=binary
-                ).unwrap(),
-            )),
+                )?))
+            }
 
             Rule::op_add => TokenKind::Op(TokenKindOperator::Add),
             Rule::op_sub => TokenKind::Op(TokenKindOperator::Sub),

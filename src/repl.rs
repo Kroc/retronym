@@ -1,9 +1,9 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use tokenstream;
 use std::io;
 use std::io::Write;
+use tokenizer::tokenstream;
 
 pub fn repl() {
     // display REPL header

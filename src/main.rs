@@ -18,10 +18,12 @@ mod parser;
 
 //==============================================================================
 
+pub mod ast;
 pub mod error;
 pub mod repl;
-pub mod token;
-pub mod tokenstream;
+pub mod tokenizer;
+
+//==============================================================================
 
 use std::io;
 use std::io::Write;

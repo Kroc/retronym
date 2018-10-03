@@ -36,7 +36,7 @@ listexpr        = _{ expr ~ ( ","? ~ listexpr )?  }
 
 expr            = _{ value ~ ( operator ~ expr )? }
 
-value           = _{ atom | name | number | deref }
+value           = _{ atom | number | deref }
 
 //==============================================================================
 
@@ -111,16 +111,6 @@ op_rep          = { "x" }   // repeat (for building a list)
 // an atom is a "keyword", this predominantly includes assembly mnemonics.
 // an atom consists of a-z, 0-9, but cannot begin with a number
 atom            = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
-
-name            = @{ label | attribute | structure }
-
-id              = @{ ASCII_ALPHA ~ alpha_num_un* }
-
-label           = @{ ":" ~ id }
-
-attribute       = @{ "@" ~ id }
-
-structure       = @{ "%" ~ id }
 
 // dereference (operator?)
 //------------------------------------------------------------------------------

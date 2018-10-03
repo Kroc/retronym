@@ -23,5 +23,15 @@
         "target/": true,
         "Cargo.lock": true
     },
-    "rust.features": ["doc"]
+    "rust.features": [
+        "doc"
+    ],
+    "spellright.language": [
+        ""
+    ],
+    "spellright.documentTypes": [
+        "markdown",
+        "latex",
+        "plaintext"
+    ]
 }
