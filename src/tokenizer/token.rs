@@ -3,8 +3,7 @@
 
 use parser::Rule;
 use pest::iterators::Pair;
-use std::error::Error;
-use ::error::TryFrom_;
+use ::error::{*};
 
 /// A `Token` is a machine-understandable representation of one 'word'
 /// (or "lexeme") of the original source code.
@@ -83,7 +82,7 @@ pub enum TokenKindDeref {
 /// Allow the direct conversion of Pest's `Pair`s into our `Token`s.
 /// This removes a lot of logic from walking the `Pair`s.
 impl<'i> TryFrom_<Pair<'i, Rule>> for Token {
-    fn try_from_(pair: Pair<'i, Rule>) -> Result<Self, Box<Error>> {
+    fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         // get the starting position of the token for line / col number;
         // this will get passed all the way through even the AST so that
         // accurate error information can be given even late into assembling
@@ -101,21 +100,21 @@ impl<'i> TryFrom_<Pair<'i, Rule>> for Token {
 }
 
 impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for i64 {
-    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self, Box<Error>> {
+    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self> {
         match pair.as_str().parse::<i64>() {
             // FIXME: Match parse error specifically?
-            Err(e) => Err(Box::new(e)),
+            Err(e) => Err(new_error(ErrorKind::ParseInt(e))),
             Ok(i) => Ok(i),
         }
     }
 }
 
 impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for u64 {
-    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self, Box<Error>> {
+    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self> {
         match pair.as_rule() {
             Rule::int_number => match pair.as_str().parse::<u64>() {
                 // FIXME: Match parse error specifically?
-                Err(e) => Err(Box::new(e)),
+                Err(e) => Err(new_error(ErrorKind::ParseInt(e))),
                 Ok(i) => Ok(i),
             },
             _ => panic!("It's a lion, get in the car!"),
@@ -124,7 +123,7 @@ impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for u64 {
 }
 
 impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for TokenKind {
-    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self, Box<Error>> {
+    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self> {
         let token_kind = match pair.as_rule() {
             Rule::atom => TokenKind::Atom(pair.to_string()),
 

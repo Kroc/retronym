@@ -1,52 +1,124 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use std::boxed::Box;
-use std::error::{self, Error};
+// NB: A lot of hints and direction taken from BurntSushi's code:
+// https://github.com/BurntSushi/rust-csv/blob/master/src/error.rs
+
+// `Error` trait from the standard-library
+use std::error::Error as StdError;
+use std::num::ParseIntError as StdParseIntError;
+use std::io;
+use std::result;
+
 use std::fmt;
 
-/// Shorthand for `Box<Error>` so as to [try to] be able to pass both Rust
-/// standard errors (e.g. `io::Error`) and our own.
-pub type BoxError = Box<Error>;
+/// A crate private constructor for `Error`.
+pub fn new_error(kind: ErrorKind) -> Error {
+    // use `pub(crate)` when it stabilizes
+    Error(Box::new(kind))
+}
+
+pub type Result<T> = result::Result<T, Error>;
 
 /// Allow a type conversion to return a potential error;
-/// this is not on stable Rust yet so we use a similarly named trait.
+/// this is not on stable Rust yet so we use a similarly named trait
 pub trait TryFrom_<T>: Sized {
-    fn try_from_(t: T) -> Result<Self, BoxError>;
+    fn try_from_(t: T) -> Result<Self>;
 }
 
-//------------------------------------------------------------------------------
+/// Our own wrapping Error-type that can contain a Rust std Error, such as
+/// `io::Error`, or our own according to the `ErrorKind` enum
+#[derive(Debug)]
+pub struct Error(Box<ErrorKind>);
 
-/// TokenError is an `Error` type that occurs when tokenizing a string to
-/// produce a `TokenStream`.
-#[derive(Debug, Clone)]
-// TODO: Add data for specific token / source location
-pub struct TokenError {
-    details: String,
-}
+impl Error {
+    /// Return the specific type of this error
+    pub fn kind(&self) -> &ErrorKind {
+        &self.0
+    }
 
-impl TokenError {
-    fn new(msg: &str) -> TokenError {
-        TokenError {
-            details: msg.to_string(),
+    /// Unwrap this error into its underlying type
+    pub fn into_kind(self) -> ErrorKind {
+        *self.0
+    }
+
+    /// Returns true if this is an I/O error.
+    ///
+    /// If this is true, the underlying `ErrorKind` is guaranteed to be
+    /// `ErrorKind::Io`.
+    pub fn is_io_error(&self) -> bool {
+        match *self.0 {
+            ErrorKind::Io(_) => true,
+            _ => false,
         }
     }
 }
 
-/// Allow printing of the `TokenError` by implementing the `Display` trait.
-impl fmt::Display for TokenError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "invalid Token")
+impl StdError for Error {
+    fn description(&self) -> &str {
+        match *self.0 {
+            ErrorKind::Test => "TEST ERROR",
+            ErrorKind::Io(ref err) => err.description(),
+            ErrorKind::ParseInt(ref err) => err.description(),
+            _ => unreachable!(),
+        }
+    }
+
+    fn cause(&self) -> Option<&StdError> {
+        match *self.0 {
+            // Test Error does not contain any error-specific data
+            ErrorKind::Test => None,
+            ErrorKind::Io(ref err) => Some(err),
+            ErrorKind::ParseInt(ref err) => Some(err),
+            _ => unreachable!(),
+        }
     }
 }
 
-impl Error for TokenError {
-    fn description(&self) -> &str {
-        "invalid Token"
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self.0 {
+            ErrorKind::Test => write!(f, "TEST ERROR"),
+            ErrorKind::Io(ref err) => err.fmt(f),
+            ErrorKind::ParseInt(ref err) => err.fmt(f),
+            _ => unreachable!(),
+        }
     }
+}
 
-    fn cause(&self) -> Option<&error::Error> {
-        // Generic error, underlying cause isn't tracked.
-        None
+/// The specific type of an error
+#[derive(Debug)]
+pub enum ErrorKind {
+    #[doc(hidden)]
+    Test,
+
+    /// An I/O error that occurred while reading source files
+    Io(io::Error),
+    /// An error parsing a string into a number
+    ParseInt(StdParseIntError),
+
+    /// Hints that destructuring should not be exhaustive.
+    ///
+    /// This enum may grow additional variants, so this makes sure clients
+    /// don't count on exhaustive matching. (Otherwise, adding a new variant
+    /// could break existing code.)
+    #[doc(hidden)]
+    __Nonexhaustive,
+}
+
+impl From<io::Error> for Error {
+    fn from(err: io::Error) -> Error {
+        new_error(ErrorKind::Io(err))
+    }
+}
+impl From<Error> for io::Error {
+    fn from(err: Error) -> io::Error {
+        io::Error::new(io::ErrorKind::Other, err)
+    }
+}
+
+impl From<StdParseIntError> for Error {
+    fn from(err: StdParseIntError) -> Error {
+        new_error(ErrorKind::ParseInt(err))
     }
 }
