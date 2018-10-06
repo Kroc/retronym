@@ -6,8 +6,8 @@
 
 // `Error` trait from the standard-library
 use std::error::Error as StdError;
-use std::num::ParseIntError as StdParseIntError;
 use std::io;
+use std::num::ParseIntError as StdParseIntError;
 use std::result;
 
 use std::fmt;

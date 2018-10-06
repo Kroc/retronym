@@ -1,9 +1,9 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
+use error::*;
 use parser::Rule;
 use pest::iterators::Pair;
-use ::error::{*};
 
 /// A `Token` is a machine-understandable representation of one 'word'
 /// (or "lexeme") of the original source code.
@@ -16,20 +16,46 @@ pub struct Token {
 
 /// As the source code is broken into `Token`s, we assign what "kind" each is
 /// via an enum, so that the assembler can work with strict type information
-/// rather than having to continually look at ASCII-codes.
+/// rather than having to continually look at ASCII-codes throughout.
 #[derive(Debug)]
 pub enum TokenKind {
-    /// Internally used for skipping sub-tokens and finding errors.
+    /// Internally used for skipping sub-tokens and finding errors
     None,
 
-    /// Atoms are the language "keywords" but also encompase the large number
-    /// of assembly mnemonics and CPU registers as these don't have sigils.
+    /// A reserved keyword; there are very few because all CPU instruction
+    /// mnemonics are implemented as macros.
+    Keyword(TokenKindKeyword),
+
+    /// An Atom is a unique word. It has no value and does not expand into
+    /// anything (it's a terminal macro). Atoms are used to implement CPU
+    /// registers, e.g. `adc A, B`. Atoms are defined by the `atom` keyword.
+    /// E.g. `atom A`. Atoms must be upper-case.
     Atom(String),
+
+    /// A Macro is a unique word that gets expanded into another block of code,
+    /// defined elsewhere. For flexibility Retronym uses macros to implement
+    /// the CPU instruction mnemonics. Macros must be lower-case.
+    Macro(String),
+
+    /// A user string, e.g. `"the quick brown fox"`.
     Str(String),
+
+    /// A literal numnber.
     Num(TokenKindNumber),
+
+    /// An operator.
     Op(TokenKindOperator),
     Deref(TokenKindDeref),
-    Label(String),
+}
+
+#[derive(Debug)]
+pub enum TokenKindKeyword {
+    /// The `atom` keyword defines a new Atom. It is a reserved keyword
+    /// because you cannot create a macro named "atom" or an atom named "atom"
+    Atom,
+    /// The `macro` keyword defines a new Macro.
+    /// You cannot create a macro named "macro" nor an Atom named "macro"
+    Macro,
 }
 
 #[derive(Debug)]
@@ -92,15 +118,15 @@ impl<'i> TryFrom_<Pair<'i, Rule>> for Token {
         let (line, col) = start.line_col();
 
         Ok(Token {
-            kind: TokenKind::try_from_(&pair)?,
+            kind: TokenKind::try_from_(pair)?,
             line: line as u32,
             col: col as u32,
         })
     }
 }
 
-impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for i64 {
-    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self> {
+impl<'i> TryFrom_<Pair<'i, Rule>> for i64 {
+    fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         match pair.as_str().parse::<i64>() {
             // FIXME: Match parse error specifically?
             Err(e) => Err(new_error(ErrorKind::ParseInt(e))),
@@ -109,8 +135,8 @@ impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for i64 {
     }
 }
 
-impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for u64 {
-    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self> {
+impl<'i> TryFrom_<Pair<'i, Rule>> for u64 {
+    fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         match pair.as_rule() {
             Rule::int_number => match pair.as_str().parse::<u64>() {
                 // FIXME: Match parse error specifically?
@@ -122,10 +148,13 @@ impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for u64 {
     }
 }
 
-impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for TokenKind {
-    fn try_from_(pair: &'p Pair<'i, Rule>) -> Result<Self> {
+impl<'i> TryFrom_<Pair<'i, Rule>> for TokenKind {
+    fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         let token_kind = match pair.as_rule() {
+            // keywords:
+            Rule::keyword => TokenKind::Keyword(TokenKindKeyword::Atom),
             Rule::atom => TokenKind::Atom(pair.to_string()),
+            Rule::mac => TokenKind::Macro(pair.to_string()),
 
             Rule::string => TokenKind::Str(pair.to_string()),
 
@@ -170,5 +199,65 @@ impl<'p, 'i> TryFrom_<&'p Pair<'i, Rule>> for TokenKind {
         };
 
         Ok(token_kind)
+    }
+}
+
+impl<'i> TryFrom_<Pair<'i, Rule>> for TokenKindKeyword {
+    fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
+        match pair.as_str().as_ref() {
+            "atom" => Ok(TokenKindKeyword::Atom),
+            "macro" => Ok(TokenKindKeyword::Macro),
+            _ => unimplemented!(),
+        }
+    }
+}
+
+impl Token {
+    /// Returns true if the token represents a keyword (any of them).
+    pub fn is_keyword(&self) -> bool {
+        match &self.kind {
+            TokenKind::Keyword(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if the token is the `atom` keyword.
+    pub fn is_keyword_atom(&self) -> bool {
+        match &self.kind {
+            TokenKind::Keyword(TokenKindKeyword::Atom) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if the token is the `macro` keyword.
+    pub fn is_keyword_macro(&self) -> bool {
+        match &self.kind {
+            TokenKind::Keyword(TokenKindKeyword::Macro) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if the token is an Atom name.
+    pub fn is_atom(&self) -> bool {
+        match &self.kind {
+            TokenKind::Atom(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if the token is a Macro name.
+    pub fn is_macro(&self) -> bool {
+        match &self.kind {
+            TokenKind::Macro(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if the token is an operator.
+    pub fn is_operator(&self) -> bool {
+        match &self.kind {
+            TokenKind::Op(_) => true,
+            _ => false,
+        }
     }
 }

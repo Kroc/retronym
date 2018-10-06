@@ -33,5 +33,6 @@
         "markdown",
         "latex",
         "plaintext"
-    ]
+    ],
+    "rust.clippy_preference": "on"
 }

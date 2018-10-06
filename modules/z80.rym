@@ -1,0 +1,28 @@
+
+; Z80 Registers:
+
+atom    A
+atom    B
+atom    C
+atom    D
+atom    E
+atom    H
+atom    L
+
+atom    AF
+atom    BC
+atom    DE
+atom    HL
+
+atom    IX
+atom    IY
+
+atom    SP
+
+atom    I
+atom    R
+
+atom    IXH
+atom    IXL
+atom    IYH
+atom    IYL

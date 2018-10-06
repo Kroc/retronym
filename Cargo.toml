@@ -7,8 +7,8 @@ version = "0.0.0"
 authors = ["Kroc Camen <kroc@camendesign.com>"]
 
 [dependencies]
-pest = "2.0.0"
-pest_derive = "2.0.0"
+pest = "2.0.1"
+pest_derive = "2.0.1"
 
 [profile.release]
 panic = 'abort'

@@ -10,21 +10,11 @@ whitespace      = _{ " " | "\t" }
 
 comment         = _{ ";" ~ ( !NEWLINE ~ ANY )* ~ NEWLINE }
 
-// support either CRLF or LF, but don't take CRLF to be two new-lines.
-// we want to capture newlines so that we check for immediate indentation
-
 // outline:
 //==============================================================================
 
 rym             = _{ SOI ~ ( NEWLINE | comment | root )* ~ EOI }
 
-// each line can be only one of two kinds:
-// (excluding blank and comment lines)
-//
-// 1. no-indent: a definition of some sort
-// 2. with-indent: a list of expressions
-//
-//TODO: make the indent/no-indent split
 root            = !{ whitespace* ~ list }
 
 // almost everything in Retronym is an implicit list, commas are optional.
@@ -36,7 +26,21 @@ listexpr        = _{ expr ~ ( ","? ~ listexpr )?  }
 
 expr            = _{ value ~ ( operator ~ expr )? }
 
-value           = _{ atom | number | deref }
+value           = _{ keyword | atom | mac | number | deref }
+
+keyword         = _{ "atom" | "macro" }
+
+atom            = _{ ASCII_ALPHA_UPPER ~ ( ASCII_DIGIT | ASCII_ALPHA_UPPER )* }
+
+mac             = _{
+                    // cannot begin with a digit
+                    ( ASCII_ALPHA_LOWER | "_" )
+                    // underscores allowed, unlike Atoms
+                    ~ ( ASCII_DIGIT | ASCII_ALPHA_UPPER | "_" )*
+                    // a trailing hash is allowed for the benefit of 6502
+                    // instructions, e.g. `lda# $FF`
+                    ~ "#"?
+                }
 
 //==============================================================================
 
@@ -45,8 +49,6 @@ value           = _{ atom | number | deref }
 string          = @{ "\"" ~ text ~ "\"" }
 
 text            = @{ ( !"\"" ~ ANY )* }
-
-alpha_num_un    = _{ ASCII_ALPHANUMERIC | "_" } 
 
 // an integer [decimal] number uses digits "0"-"9" but cannot begin with "0"
 // TODO: negative integers
@@ -73,6 +75,7 @@ operator        = _{
                     // double-asterisk and we don't want to confuse
                     // it with multiply first
                     op_pow |
+
                     op_add | op_sub | op_mul | op_div | op_mod |
                     op_xor | op_and | op_or | op_shl | op_shr |
 
@@ -105,12 +108,6 @@ op_shr          = { ">>" }  // shift-right
 
 
 op_rep          = { "x" }   // repeat (for building a list)
-
-//------------------------------------------------------------------------------
-
-// an atom is a "keyword", this predominantly includes assembly mnemonics.
-// an atom consists of a-z, 0-9, but cannot begin with a number
-atom            = @{ ASCII_ALPHA ~ ASCII_ALPHANUMERIC* }
 
 // dereference (operator?)
 //------------------------------------------------------------------------------

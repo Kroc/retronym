@@ -13,12 +13,19 @@ pub type Tokens = Vec<Token>;
 /// representation of the source code, split into 'words' ("lexemes"),
 /// and marked up with specific types.
 pub struct TokenStream {
-    pub tokens: Tokens,
+    /// The collection of tokens; not exposed publicly so that we can
+    /// implement the immutable interface with internal cursor
+    tokens: Tokens,
+    /// The current cursor position within the stream
+    index: usize,
 }
 
 impl TokenStream {
     fn tokenize(source: String) -> Self {
-        let mut tokenstream = TokenStream { tokens: Vec::new() };
+        let mut tokenstream = TokenStream {
+            tokens: Vec::new(),
+            index: 0,
+        };
 
         let pairs = RymParser::parse(Rule::rym, &source);
         if pairs.is_err() {
@@ -40,6 +47,18 @@ impl TokenStream {
         }
 
         tokenstream
+    }
+
+    /// Rewind the `TokenStream` back to the beginning
+    pub fn rewind(&mut self) {
+        self.index = 0;
+    }
+
+    /// Move the cursor forward and return the Token
+    pub fn next(&mut self) -> Option<&Token> {
+        self.index += 1;
+        // if we've hit the end of the `TokenStream` this will return `None`
+        self.tokens.get(self.index)
     }
 }
 

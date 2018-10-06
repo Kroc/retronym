@@ -1,14 +1,18 @@
 
     ;comment
 
-    atom                        ;a single unique word; it has no associated value, only uniqueness
+    ATOM                        ;a single unique word; it has no associated value, only uniqueness
 
-    CONST                       ;constant?
+    macro                       ;lower-case word
+
+    !CONST                      ;constant
 
     $FFFF                       ;hexadecimal number
 
     %10101010                   ;binary number
 
+    ::module
+    
     :label                      ;label name
 
     @attribute                  ;an attribute -- an offside associated value, e.g. size
@@ -17,8 +21,6 @@
 
     #type                       ;a hash (array)
 
-    !macro                      ;macro name
-
     $.RAM                       ;RAM variable name
 
     "a string"
@@ -26,3 +28,34 @@
 
     Useful article on ternary operators:
     https://dev.to/mortoray/we-dont-need-a-ternary-operator-309n
+
+
+; an atom is a unique symbol and has no value
+atom    A
+
+
+;adc#    ?
+;adc     zp?
+;adc     zp?, x
+;adc     ?
+;adc     ?, x
+;adc     ?, y
+;adc     [zp?, x]
+;adc     [zp?], y
+
+macro   adc#    \1
+{
+    %byte   $69, \1
+}
+
+macro   adc     \1
+{
+    %byte
+
+    \1 > $FF ? $60 : $65
+    \1
+
+    \atom ? \end
+
+    \shift
+}

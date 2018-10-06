@@ -1,0 +1,16 @@
+Object file:
+
+* meta-data
+* imports and exports
+* functions
+* raw data
+* calculations
+* relaxtion joints
+* control flow points
+
+Data to link would be a stream of control blocks that would specify what to do with the block before linking
+
+Functions are essentially a named set of control blocks that are applied on-site.
+
+Macros are expanded whilst creating the object file;
+objects have no internal notion of macros.

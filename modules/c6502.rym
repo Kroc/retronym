@@ -1,0 +1,10 @@
+
+; 6502 Registers:
+; The 6502 has only three registers!
+
+; in the majority of instances, the registers appear as part of the mneomnics
+; so they are not written out as often as Z80, for example
+
+atom    A       ; Accumulator, 8-bits
+atom    X       ; X-index register, 8-bits
+atom    Y       ; Y-index register, 8-bits
