@@ -1,9 +1,9 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
+use object::Object;
 use std::io;
 use std::io::Write;
-use tokenizer::tokenstream;
 
 pub fn repl() {
     // display REPL header
@@ -22,7 +22,6 @@ pub fn repl() {
         // get user input
         io::stdin().read_line(&mut line).unwrap();
 
-        // parse the line given
-        tokenstream::TokenStream::from(&line);
+        let _object = Object::new_from_str(&line);
     }
 }

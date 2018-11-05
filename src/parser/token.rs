@@ -2,24 +2,48 @@
 // BSD 2-clause licence; see LICENSE.TXT
 
 use error::*;
-use parser::Rule;
+use parser::parser::Rule;
 use pest::iterators::Pair;
+
+//------------------------------------------------------------------------------
 
 /// A `Token` is a machine-understandable representation of one 'word'
 /// (or "lexeme") of the original source code.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Token {
     pub kind: TokenKind,
+    pub data: TokenData,
     pub line: u32,
     pub col: u32,
+}
+
+impl Default for Token {
+    /// Create an empty `Token`
+    fn default() -> Self {
+        Self {
+            kind: TokenKind::None,
+            data: TokenData::None,
+            line: 0,
+            col: 0,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum TokenData {
+    None,
+    String(String),
+    I64(i64),
+    U64(u64),
+    F64(f64),
 }
 
 /// As the source code is broken into `Token`s, we assign what "kind" each is
 /// via an enum, so that the assembler can work with strict type information
 /// rather than having to continually look at ASCII-codes throughout.
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TokenKind {
-    /// Internally used for skipping sub-tokens and finding errors
+    /// Internally used for skipping sub-tokens and finding errors.
     None,
 
     /// A reserved keyword; there are very few because all CPU instruction
@@ -40,7 +64,7 @@ pub enum TokenKind {
     /// A user string, e.g. `"the quick brown fox"`.
     Str(String),
 
-    /// A literal numnber.
+    /// A literal number.
     Num(TokenKindNumber),
 
     /// An operator.
@@ -48,30 +72,30 @@ pub enum TokenKind {
     Deref(TokenKindDeref),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TokenKindKeyword {
     /// The `atom` keyword defines a new Atom. It is a reserved keyword
-    /// because you cannot create a macro named "atom" or an atom named "atom"
+    /// because you cannot create a macro named "atom" or an atom named "atom".
     Atom,
     /// The `macro` keyword defines a new Macro.
-    /// You cannot create a macro named "macro" nor an Atom named "macro"
+    /// You cannot create a macro named "macro" nor an Atom named "macro".
     Macro,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TokenKindNumber {
-    /// An integer number (signed)
+    /// An integer number (signed).
     Int(i64),
     /// A floating-point number. All floating-point calculations are done with
     /// 64-bit floats to minimise rounding errors in intermediate calculations
     /// -- the assembly for the target system itself is likely to be Integer
-    /// or 32-bit Float at best anyway
+    /// or 32-bit Float at best anyway.
     Float(f64),
     Hex(u64),
     Bin(u64),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TokenKindOperator {
     /// Addition operator "+"
     Add,
@@ -99,15 +123,17 @@ pub enum TokenKindOperator {
     Rep,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum TokenKindDeref {
     Begin,
     End,
 }
 
+//------------------------------------------------------------------------------
+
 /// Allow the direct conversion of Pest's `Pair`s into our `Token`s.
 /// This removes a lot of logic from walking the `Pair`s.
-impl<'i> TryFrom_<Pair<'i, Rule>> for Token {
+impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for Token {
     fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         // get the starting position of the token for line / col number;
         // this will get passed all the way through even the AST so that
@@ -119,13 +145,14 @@ impl<'i> TryFrom_<Pair<'i, Rule>> for Token {
 
         Ok(Token {
             kind: TokenKind::try_from_(pair)?,
+            data: TokenData::None,
             line: line as u32,
             col: col as u32,
         })
     }
 }
 
-impl<'i> TryFrom_<Pair<'i, Rule>> for i64 {
+impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for i64 {
     fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         match pair.as_str().parse::<i64>() {
             // FIXME: Match parse error specifically?
@@ -135,7 +162,7 @@ impl<'i> TryFrom_<Pair<'i, Rule>> for i64 {
     }
 }
 
-impl<'i> TryFrom_<Pair<'i, Rule>> for u64 {
+impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for u64 {
     fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         match pair.as_rule() {
             Rule::int_number => match pair.as_str().parse::<u64>() {
@@ -148,14 +175,16 @@ impl<'i> TryFrom_<Pair<'i, Rule>> for u64 {
     }
 }
 
-impl<'i> TryFrom_<Pair<'i, Rule>> for TokenKind {
+impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for TokenKind {
     fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         let token_kind = match pair.as_rule() {
-            // keywords:
+            // keywords
             Rule::keyword => TokenKind::Keyword(TokenKindKeyword::Atom),
+            // an Atom name
             Rule::atom => TokenKind::Atom(pair.to_string()),
+            // a Macro name
             Rule::mac => TokenKind::Macro(pair.to_string()),
-
+            // a string, e.g. `"the quick brown fox"`
             Rule::string => TokenKind::Str(pair.to_string()),
 
             Rule::int_number => TokenKind::Num(TokenKindNumber::Int(
@@ -202,7 +231,7 @@ impl<'i> TryFrom_<Pair<'i, Rule>> for TokenKind {
     }
 }
 
-impl<'i> TryFrom_<Pair<'i, Rule>> for TokenKindKeyword {
+impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for TokenKindKeyword {
     fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         match pair.as_str().as_ref() {
             "atom" => Ok(TokenKindKeyword::Atom),
@@ -212,12 +241,21 @@ impl<'i> TryFrom_<Pair<'i, Rule>> for TokenKindKeyword {
     }
 }
 
+//------------------------------------------------------------------------------
+
 impl Token {
     /// Returns true if the token represents a keyword (any of them).
     pub fn is_keyword(&self) -> bool {
         match &self.kind {
             TokenKind::Keyword(_) => true,
             _ => false,
+        }
+    }
+
+    pub fn expect_keyword(&self, kind: TokenKindKeyword) -> Option<&Token> {
+        match &self.kind {
+            TokenKind::Keyword(k) if k == &kind => Some(self),
+            _ => None,
         }
     }
 
@@ -249,6 +287,22 @@ impl Token {
     pub fn is_macro(&self) -> bool {
         match &self.kind {
             TokenKind::Macro(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if the token is a string.
+    pub fn is_string(&self) -> bool {
+        match &self.kind {
+            TokenKind::Str(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Returns true if the token is a number (of any kind).
+    pub fn is_number(&self) -> bool {
+        match &self.kind {
+            TokenKind::Num(_) => true,
             _ => false,
         }
     }

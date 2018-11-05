@@ -10,18 +10,14 @@
 extern crate pest;
 #[macro_use]
 extern crate pest_derive;
-/// We're using Pest as our parser and don't need to expose this as our own
-mod parser;
-
-//#[macro_use]
-//extern crate errln;
 
 //==============================================================================
 
-pub mod ast;
 pub mod error;
 pub mod repl;
-pub mod tokenizer;
+
+pub mod object;
+pub mod parser;
 
 //==============================================================================
 

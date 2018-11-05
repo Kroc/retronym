@@ -15,7 +15,8 @@
             ],
             "presentation": {
                 "reveal": "silent",
-                "panel": "dedicated"
+                "panel": "dedicated",
+                "clear": true,
             },
             "group": {
                 "kind": "build",
@@ -31,7 +32,10 @@
             ],
             "problemMatcher": [
                 "$rustc"
-            ]
+            ],
+            "presentation": {
+                "clear": true,
+            }
         }
     ]
 }

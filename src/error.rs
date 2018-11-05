@@ -22,7 +22,7 @@ pub type Result<T> = result::Result<T, Error>;
 
 /// Allow a type conversion to return a potential error;
 /// this is not on stable Rust yet so we use a similarly named trait
-pub trait TryFrom_<T>: Sized {
+pub trait TryFrom_<'t, T>: Sized {
     fn try_from_(t: T) -> Result<Self>;
 }
 

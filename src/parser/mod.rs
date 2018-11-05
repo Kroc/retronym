@@ -14,5 +14,8 @@
 //! can implement new keywords and we can therefore not gaurantee that all
 //! keywords are known by looking at the words in a single file.
 
+pub mod error;
+pub mod ast;
+pub mod parser;
 pub mod token;
 pub mod tokenstream;
