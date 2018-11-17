@@ -6,7 +6,7 @@
 // whitespace-aware somewhat like python. therefore, the `whitespace`
 // rule is defined without new-line and we manage that separately
 
-whitespace      = _{ " " | "\t" }
+WHITESPACE      = _{ " " | "\t" }
 
 comment         = _{ ";" ~ ( !NEWLINE ~ ANY )* ~ NEWLINE }
 
@@ -15,7 +15,7 @@ comment         = _{ ";" ~ ( !NEWLINE ~ ANY )* ~ NEWLINE }
 
 rym             = _{ SOI ~ ( NEWLINE | comment | root )* ~ EOI }
 
-root            = !{ whitespace* ~ list }
+root            = !{ WHITESPACE* ~ list }
 
 // almost everything in Retronym is an implicit list, commas are optional.
 // for example, strings are self-contained lists of bytes

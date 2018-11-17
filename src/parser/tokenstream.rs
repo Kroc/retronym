@@ -4,7 +4,7 @@
 use error::TryFrom_;
 use parser::parser::Rule;
 use parser::parser::RymParser;
-use parser::token::{Token, TokenKind, TokenKindKeyword};
+use parser::token::{Token, TokenKind, TokenKeyword, NULLTOKEN};
 use pest::Parser;
 
 pub type Tokens = Vec<Token>;
@@ -13,20 +13,15 @@ pub type Tokens = Vec<Token>;
 /// representation of the source code, split into 'words' ("lexemes"),
 /// and marked up with specific types.
 pub struct TokenStream {
-    tokens: Tokens,
-}
-
-impl Default for TokenStream {
-    /// Create an empty `TokenStream`
-    fn default() -> Self {
-        Self { tokens: Vec::new() }
-    }
+    tokens: Tokens
 }
 
 impl TokenStream {
     fn tokenize(source: String) -> Self {
         // create an empty TokenStream to begin with
-        let mut tokenstream = Self::default();
+        let mut tokenstream = Self {
+            tokens: Vec::new(),
+        };
 
         let pairs = RymParser::parse(Rule::rym, &source);
         if pairs.is_err() {
@@ -39,10 +34,6 @@ impl TokenStream {
                 //let inner_span = inner_pair.clone().into_span();
                 let token = Token::try_from_(inner_pair).unwrap();
                 println!("{:?}", token);
-                // a huge thanks to this reddit post that explained that
-                // you have to use "...0..." to access the native methods
-                // of the vector within the new-type
-                // https://www.reddit.com/r/rust/comments/3wgb4e//cxvzpdw/
                 tokenstream.tokens.push(token);
             }
         }
@@ -52,10 +43,10 @@ impl TokenStream {
 
     // Get an `Iterator` for the `Token`s; this can be used
     // to walk the `TokenStream` contents in standard fashion
-    pub fn iter(&self) -> TokenStreamIterator {
-        TokenStreamIterator {
+    pub fn iter(&self) -> TokenIterator {
+        TokenIterator {
             inner: self.tokens.iter(),
-            token: None,
+            token: &NULLTOKEN,
         }
     }
 }
@@ -69,33 +60,61 @@ impl<T: ToString> From<T> for TokenStream {
     }
 }
 
-pub struct TokenStreamIterator<'t> {
+//==============================================================================
+
+pub struct TokenIterator<'t> {
     inner: ::std::slice::Iter<'t, Token>,
-    pub token: Option<&'t Token>,
+    pub token: &'t Token,
 }
 
 // an Iterator of Token references:
-impl<'a> Iterator for TokenStreamIterator<'a> {
+impl<'a> Iterator for TokenIterator<'a> {
     type Item = &'a Token;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.token = self.inner.next();
-        self.token
+        // is there another token?
+        match self.inner.next() {
+            // yes;
+            Some(ref token) => {
+                // set the 'current' token
+                self.token = token;
+                // and return it
+                Some(token)
+            }
+            // no;
+            None => {
+                // set the 'current' token to the dummy
+                self.token = &NULLTOKEN;
+                // but return None as expected from `next`
+                None
+            }
+        }
     }
 }
 
-impl<'t> TokenStreamIterator<'t> {
+impl<'t> TokenIterator<'t> {
+    pub fn current(&self) -> &Token {
+        self.token
+    }
+
+    /// Is the current token an "End Of File" token?
     pub fn is_eof(&self) -> bool {
-        self.token.is_none()
+        self.token.is_eof()
+    }
+
+    /// Returns true if the token is a number (of any kind).
+    pub fn is_number(&self) -> bool {
+        self.token.is_number()
     }
 
     /// Return the current token, but move to the next
-    pub fn consume(&mut self) -> Option<&Token> {
+    pub fn consume(&mut self) -> &Token {
         let token = self.token;
         let _ = self.next();
         token
     }
 
+    /*
     /// If the current token is a particular keyword
     /// then return the token, otherwise return None.
     pub fn expect_keyword(&mut self, kind: TokenKindKeyword) -> Option<&Token> {
@@ -117,4 +136,5 @@ impl<'t> TokenStreamIterator<'t> {
             _ => None,
         })
     }
+    */
 }

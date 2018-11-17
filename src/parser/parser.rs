@@ -12,19 +12,15 @@ pub struct RymParser;
 
 //------------------------------------------------------------------------------
 
-use parser::error::*;
 use parser::ast::{ASTNode, ASTResult, MaybeASTResult};
-use parser::token::{TokenKind, TokenKindKeyword};
-use parser::tokenstream::TokenStreamIterator;
+use parser::tokenstream::TokenIterator;
 
 pub struct Parser<'t> {
-    /// A `TokenStream` (or any `Iterator<Item = Token>`), from which we'll
-    /// read `Token`s and parse into an `AST`.
-    tokens: TokenStreamIterator<'t>,
+    tokens: TokenIterator<'t>,
 }
 
 impl<'t> Parser<'t> {
-    pub fn new(mut tokens: TokenStreamIterator<'t>) -> Parser<'t> {
+    pub fn new(mut tokens: TokenIterator<'t>) -> Parser<'t> {
         // TODO: error with no tokens in tokenstream?
         // read the first token and store as the 'current' token
         let _ = tokens.next();
@@ -34,22 +30,22 @@ impl<'t> Parser<'t> {
 
     fn root(&mut self) -> MaybeASTResult {
         // what's allowed at root level?
-        self.atomdef()
+        self.parse_number()
     }
 
-    fn atomdef(&mut self) -> MaybeASTResult {
-        if self.tokens.is_eof() {
-            return Some(Err(new_parse_error(ParseErrorKind::EndOfFile)));
+    fn parse_number(&mut self) -> MaybeASTResult {
+        // is the current token relevant to us?
+        if !self.tokens.is_number() {
+            // if not, return None to indicate that this is not our
+            // responsibility; it's up to the caller to decide if that's
+            // unexpected or not
+            return None;
         };
-        match self.tokens.expect_keyword(TokenKindKeyword::Atom) {
-            Some(t) => match t.kind {
-                TokenKind::Atom(ref atom) => {
-                    Some(Ok(ASTNode::new_atomdef(atom)))
-                }
-                _ => panic!("No Atom following the `atom` keyword."),
-            },
-            None => panic!("No Atom following the `atom` keyword."),
-        }
+
+        // TODO: return an AST node of a literal number
+        Some(Ok(
+            ASTNode::from( self.tokens.consume() )
+        ))
     }
 }
 

@@ -6,12 +6,12 @@
 //! a binary file, given a set of imports (from other Objects) to 'fill in the
 //! blanks'.
 
-use parser::tokenstream::TokenStream;
-use parser::parser::Parser;
 use parser::ast::AST;
+use parser::parser::Parser;
+use parser::tokenstream::TokenStream;
 
 pub struct Object {
-    _ast: AST
+    _ast: AST,
 }
 
 impl Object {
@@ -20,7 +20,12 @@ impl Object {
         let tokenstream = TokenStream::from(source);
         // create a parser from the token stream;
         // this will output AST nodes
-        let _parser = Parser::new(tokenstream.iter());
+        let parser = Parser::new(tokenstream.iter());
+
+        // crank the parser and churn out ASTNodes
+        for n in parser {
+            println!("{:?}", n);
+        }
 
         Object {
             _ast: AST::default(),

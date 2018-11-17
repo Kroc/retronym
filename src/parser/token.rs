@@ -7,35 +7,30 @@ use pest::iterators::Pair;
 
 //------------------------------------------------------------------------------
 
-/// A `Token` is a machine-understandable representation of one 'word'
-/// (or "lexeme") of the original source code.
+/// A `Token` is a machine-understandable representation
+/// of one 'word' (or "lexeme") of the original source code.
 #[derive(Clone, Debug)]
 pub struct Token {
     pub kind: TokenKind,
-    pub data: TokenData,
     pub line: u32,
     pub col: u32,
 }
 
+pub const NULLTOKEN: Token = Token {
+    kind: TokenKind::EOF,
+    line: 0,
+    col: 0,
+};
+
 impl Default for Token {
-    /// Create an empty `Token`
+    /// Create an empty `Token`.
     fn default() -> Self {
         Self {
-            kind: TokenKind::None,
-            data: TokenData::None,
+            kind: TokenKind::EOF,
             line: 0,
             col: 0,
         }
     }
-}
-
-#[derive(Clone, Debug)]
-pub enum TokenData {
-    None,
-    String(String),
-    I64(i64),
-    U64(u64),
-    F64(f64),
 }
 
 /// As the source code is broken into `Token`s, we assign what "kind" each is
@@ -43,47 +38,48 @@ pub enum TokenData {
 /// rather than having to continually look at ASCII-codes throughout.
 #[derive(Clone, Debug, PartialEq)]
 pub enum TokenKind {
-    /// Internally used for skipping sub-tokens and finding errors.
-    None,
-
+    /// An 'End Of File' token, used to denote termination without having
+    /// to use an `Option<Token>`.
+    EOF,
     /// A reserved keyword; there are very few because all CPU instruction
     /// mnemonics are implemented as macros.
-    Keyword(TokenKindKeyword),
-
+    Keyword(TokenKeyword),
     /// An Atom is a unique word. It has no value and does not expand into
     /// anything (it's a terminal macro). Atoms are used to implement CPU
     /// registers, e.g. `adc A, B`. Atoms are defined by the `atom` keyword.
-    /// E.g. `atom A`. Atoms must be upper-case.
+    /// E.g. `atom A`. Atoms must be _upper-case_.
     Atom(String),
-
     /// A Macro is a unique word that gets expanded into another block of code,
     /// defined elsewhere. For flexibility Retronym uses macros to implement
-    /// the CPU instruction mnemonics. Macros must be lower-case.
+    /// the CPU instruction mnemonics. Macros must be _lower-case_.
     Macro(String),
-
     /// A user string, e.g. `"the quick brown fox"`.
     Str(String),
-
     /// A literal number.
-    Num(TokenKindNumber),
-
+    Num(TokenNumber),
     /// An operator.
-    Op(TokenKindOperator),
-    Deref(TokenKindDeref),
+    Op(TokenOperator),
+    /// A 'dereference', the square brackets "[" & "]", indicate a memory
+    /// or index dereference.
+    Deref(TokenDeref),
+    /// The beginning of an explicit list; "(".
+    ListBegin,
+    /// The end of an explicit list; ")".
+    ListEnd,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum TokenKindKeyword {
+pub enum TokenKeyword {
     /// The `atom` keyword defines a new Atom. It is a reserved keyword
     /// because you cannot create a macro named "atom" or an atom named "atom".
     Atom,
-    /// The `macro` keyword defines a new Macro.
-    /// You cannot create a macro named "macro" nor an Atom named "macro".
+    /// The `macro` keyword defines a new Macro. You cannot create a macro
+    /// named "macro" nor an Atom named "macro".
     Macro,
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum TokenKindNumber {
+pub enum TokenNumber {
     /// An integer number (signed).
     Int(i64),
     /// A floating-point number. All floating-point calculations are done with
@@ -96,7 +92,7 @@ pub enum TokenKindNumber {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum TokenKindOperator {
+pub enum TokenOperator {
     /// Addition operator "+"
     Add,
     /// Subtraction operator "-"
@@ -124,7 +120,7 @@ pub enum TokenKindOperator {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum TokenKindDeref {
+pub enum TokenDeref {
     Begin,
     End,
 }
@@ -145,7 +141,6 @@ impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for Token {
 
         Ok(Token {
             kind: TokenKind::try_from_(pair)?,
-            data: TokenData::None,
             line: line as u32,
             col: col as u32,
         })
@@ -179,7 +174,7 @@ impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for TokenKind {
     fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         let token_kind = match pair.as_rule() {
             // keywords
-            Rule::keyword => TokenKind::Keyword(TokenKindKeyword::Atom),
+            Rule::keyword => TokenKind::Keyword(TokenKeyword::Atom),
             // an Atom name
             Rule::atom => TokenKind::Atom(pair.to_string()),
             // a Macro name
@@ -187,12 +182,12 @@ impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for TokenKind {
             // a string, e.g. `"the quick brown fox"`
             Rule::string => TokenKind::Str(pair.to_string()),
 
-            Rule::int_number => TokenKind::Num(TokenKindNumber::Int(
+            Rule::int_number => TokenKind::Num(TokenNumber::Int(
                 // attempt to convert the `Pair` to an i64,
                 // if it fails, the error will propogate upwards
                 i64::try_from_(pair)?,
             )),
-            Rule::hex_number => TokenKind::Num(TokenKindNumber::Hex(
+            Rule::hex_number => TokenKind::Num(TokenNumber::Hex(
                 // create an unsigned 64-bit Int from a string...
                 u64::from_str_radix(
                     // ignore the first character ("$")
@@ -201,41 +196,41 @@ impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for TokenKind {
                 )?,
             )),
             Rule::bin_number => {
-                TokenKind::Num(TokenKindNumber::Bin(u64::from_str_radix(
+                TokenKind::Num(TokenNumber::Bin(u64::from_str_radix(
                     // ignore the first character ("%")
                     &pair.as_str()[1..],
                     2, //=binary
                 )?))
             }
 
-            Rule::op_add => TokenKind::Op(TokenKindOperator::Add),
-            Rule::op_sub => TokenKind::Op(TokenKindOperator::Sub),
-            Rule::op_mul => TokenKind::Op(TokenKindOperator::Mul),
-            Rule::op_div => TokenKind::Op(TokenKindOperator::Div),
-            Rule::op_mod => TokenKind::Op(TokenKindOperator::Mod),
-            Rule::op_pow => TokenKind::Op(TokenKindOperator::Pow),
-            Rule::op_xor => TokenKind::Op(TokenKindOperator::Xor),
-            Rule::op_and => TokenKind::Op(TokenKindOperator::And),
-            Rule::op_or => TokenKind::Op(TokenKindOperator::Or),
-            Rule::op_shl => TokenKind::Op(TokenKindOperator::Shl),
-            Rule::op_shr => TokenKind::Op(TokenKindOperator::Shr),
-            Rule::op_rep => TokenKind::Op(TokenKindOperator::Rep),
+            Rule::op_add => TokenKind::Op(TokenOperator::Add),
+            Rule::op_sub => TokenKind::Op(TokenOperator::Sub),
+            Rule::op_mul => TokenKind::Op(TokenOperator::Mul),
+            Rule::op_div => TokenKind::Op(TokenOperator::Div),
+            Rule::op_mod => TokenKind::Op(TokenOperator::Mod),
+            Rule::op_pow => TokenKind::Op(TokenOperator::Pow),
+            Rule::op_xor => TokenKind::Op(TokenOperator::Xor),
+            Rule::op_and => TokenKind::Op(TokenOperator::And),
+            Rule::op_or => TokenKind::Op(TokenOperator::Or),
+            Rule::op_shl => TokenKind::Op(TokenOperator::Shl),
+            Rule::op_shr => TokenKind::Op(TokenOperator::Shr),
+            Rule::op_rep => TokenKind::Op(TokenOperator::Rep),
 
-            Rule::deref_begin => TokenKind::Deref(TokenKindDeref::Begin),
-            Rule::deref_end => TokenKind::Deref(TokenKindDeref::End),
+            Rule::deref_begin => TokenKind::Deref(TokenDeref::Begin),
+            Rule::deref_end => TokenKind::Deref(TokenDeref::End),
 
-            _ => TokenKind::None,
+            _ => TokenKind::EOF,
         };
 
         Ok(token_kind)
     }
 }
 
-impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for TokenKindKeyword {
+impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for TokenKeyword {
     fn try_from_(pair: Pair<'i, Rule>) -> Result<Self> {
         match pair.as_str().as_ref() {
-            "atom" => Ok(TokenKindKeyword::Atom),
-            "macro" => Ok(TokenKindKeyword::Macro),
+            "atom" => Ok(TokenKeyword::Atom),
+            "macro" => Ok(TokenKeyword::Macro),
             _ => unimplemented!(),
         }
     }
@@ -244,6 +239,14 @@ impl<'i, 'p> TryFrom_<'p, Pair<'i, Rule>> for TokenKindKeyword {
 //------------------------------------------------------------------------------
 
 impl Token {
+    // Returns true if the token is an `EOF` ("End Of File") token.
+    pub fn is_eof(&self) -> bool {
+        match &self.kind {
+            TokenKind::EOF => true,
+            _ => false,
+        }
+    }
+
     /// Returns true if the token represents a keyword (any of them).
     pub fn is_keyword(&self) -> bool {
         match &self.kind {
@@ -252,7 +255,7 @@ impl Token {
         }
     }
 
-    pub fn expect_keyword(&self, kind: TokenKindKeyword) -> Option<&Token> {
+    pub fn expect_keyword(&self, kind: TokenKeyword) -> Option<&Token> {
         match &self.kind {
             TokenKind::Keyword(k) if k == &kind => Some(self),
             _ => None,
@@ -262,7 +265,7 @@ impl Token {
     /// Returns true if the token is the `atom` keyword.
     pub fn is_keyword_atom(&self) -> bool {
         match &self.kind {
-            TokenKind::Keyword(TokenKindKeyword::Atom) => true,
+            TokenKind::Keyword(TokenKeyword::Atom) => true,
             _ => false,
         }
     }
@@ -270,7 +273,7 @@ impl Token {
     /// Returns true if the token is the `macro` keyword.
     pub fn is_keyword_macro(&self) -> bool {
         match &self.kind {
-            TokenKind::Keyword(TokenKindKeyword::Macro) => true,
+            TokenKind::Keyword(TokenKeyword::Macro) => true,
             _ => false,
         }
     }

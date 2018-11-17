@@ -13,19 +13,19 @@ use std::result;
 use std::fmt;
 
 /// Our own wrapping Error-type that can contain a Rust std Error, such as
-/// `io::Error`, or our own according to the `ErrorKind` enum
+/// `io::Error`, or our own according to the `ParseErrorKind` enum
 #[derive(Debug)]
 pub struct ParseError(Box<ParseErrorKind>);
 
-/// The specific type of an error
+/// The specific type of an error:
 #[derive(Debug)]
 pub enum ParseErrorKind {
-    #[doc(hidden)]
-    Test,
-
     /// "End Of File" error. This occurs when reading tokens and you reach
     /// the end. It's up to the caller to decide if this is "unexpected".
     EndOfFile,
+
+    #[doc(hidden)]
+    Unimplemented,
 
     /// An I/O error that occurred while reading source files
     Io(io::Error),
@@ -41,29 +41,39 @@ pub enum ParseErrorKind {
     __Nonexhaustive,
 }
 
-/// A crate private constructor for `Error`.
-pub fn new_parse_error(kind: ParseErrorKind) -> ParseError {
+/// A crate-private constructor for `ParseError`.
+pub fn parse_error(kind: ParseErrorKind) -> ParseError {
     // use `pub(crate)` when it stabilizes
     ParseError(Box::new(kind))
 }
 
+/// The `Result` type that includes `ParseError`
 pub type ParseResult<T> = result::Result<T, ParseError>;
 
 impl ParseError {
     /// Return the specific type of this error
     pub fn kind(&self) -> &ParseErrorKind {
+        // return the embedded error
         &self.0
     }
 
     /// Unwrap this error into its underlying type
     pub fn into_kind(self) -> ParseErrorKind {
+        // dereference the embedded error
         *self.0
+    }
+
+    pub fn is_endoffile(&self) -> bool {
+        match *self.0 {
+                ParseErrorKind::EndOfFile => true,
+                _ => false,
+        }
     }
 
     /// Returns true if this is an I/O error.
     ///
-    /// If this is true, the underlying `ErrorKind` is guaranteed to be
-    /// `ErrorKind::Io`.
+    /// If this is true, the underlying `ParseErrorKind`
+    /// is guaranteed to be `ParseErrorKind::Io`.
     pub fn is_io_error(&self) -> bool {
         match *self.0 {
             ParseErrorKind::Io(_) => true,
@@ -72,10 +82,11 @@ impl ParseError {
     }
 }
 
+// "I'm a real boy!"
 impl StdError for ParseError {
     fn description(&self) -> &str {
         match *self.0 {
-            ParseErrorKind::Test => "TEST ERROR",
+            ParseErrorKind::Unimplemented => "Unimplemented",
             ParseErrorKind::EndOfFile => "End Of File",
             ParseErrorKind::Io(ref err) => err.description(),
             ParseErrorKind::ParseInt(ref err) => err.description(),
@@ -85,8 +96,7 @@ impl StdError for ParseError {
 
     fn cause(&self) -> Option<&StdError> {
         match *self.0 {
-            // Test Error does not contain any error-specific data
-            ParseErrorKind::Test => None,
+            ParseErrorKind::Unimplemented => None,
             // should this return the file name?
             ParseErrorKind::EndOfFile => None,
             ParseErrorKind::Io(ref err) => Some(err),
@@ -99,7 +109,7 @@ impl StdError for ParseError {
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self.0 {
-            ParseErrorKind::Test => write!(f, "TEST ERROR"),
+            ParseErrorKind::Unimplemented => write!(f, "Unimplemented"),
             ParseErrorKind::EndOfFile => write!(f, "End Of File"),
             ParseErrorKind::Io(ref err) => err.fmt(f),
             ParseErrorKind::ParseInt(ref err) => err.fmt(f),
@@ -110,7 +120,7 @@ impl fmt::Display for ParseError {
 
 impl From<io::Error> for ParseError {
     fn from(err: io::Error) -> ParseError {
-        new_parse_error(ParseErrorKind::Io(err))
+        parse_error(ParseErrorKind::Io(err))
     }
 }
 impl From<ParseError> for io::Error {
@@ -121,6 +131,6 @@ impl From<ParseError> for io::Error {
 
 impl From<StdParseIntError> for ParseError {
     fn from(err: StdParseIntError) -> ParseError {
-        new_parse_error(ParseErrorKind::ParseInt(err))
+        parse_error(ParseErrorKind::ParseInt(err))
     }
 }
