@@ -7,8 +7,7 @@
 //! blanks'.
 
 use parser::ast::AST;
-use parser::parser::Parser;
-use parser::tokenstream::TokenStream;
+use parser::parser::RymParser;
 
 pub struct Object {
     _ast: AST,
@@ -16,15 +15,13 @@ pub struct Object {
 
 impl Object {
     pub fn new_from_str(source: &str) -> Object {
-        // scan the source code into a token stream
-        let tokenstream = TokenStream::from(source);
         // create a parser from the token stream;
         // this will output AST nodes
-        let parser = Parser::new(tokenstream.iter());
+        let parser = RymParser::from_str(source);
 
         // crank the parser and churn out ASTNodes
         for n in parser {
-            println!("{:?}", n);
+            println!("{}", n);
         }
 
         Object {

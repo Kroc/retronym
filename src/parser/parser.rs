@@ -6,53 +6,41 @@
 #[cfg(debug_assertions)]
 const _GRAMMAR: &'static str = include_str!("retronym.pest");
 
+// build a parser using Pest:
+
+use pest::Parser;
+
 #[derive(Parser)]
 #[grammar = "parser/retronym.pest"]
-pub struct RymParser;
-
-//------------------------------------------------------------------------------
-
-use parser::ast::{ASTNode, ASTResult, MaybeASTResult};
-use parser::tokenstream::TokenIterator;
-
-pub struct Parser<'t> {
-    tokens: TokenIterator<'t>,
+pub struct RymParser<'p, R>{
+    pairs: Pairs<'p, R>
 }
 
-impl<'t> Parser<'t> {
-    pub fn new(mut tokens: TokenIterator<'t>) -> Parser<'t> {
-        // TODO: error with no tokens in tokenstream?
-        // read the first token and store as the 'current' token
-        let _ = tokens.next();
+use pest::iterators::Pairs;
 
-        Parser { tokens }
-    }
+impl<'p> RymParser<'p, Rule> {
+    /// NB: the string reference must live as long as the `RymParser`;
+    /// that is, the source string you pass it will not deallocate until
+    /// the RymParser does as well.
+    pub fn from_str(source: &'p str) -> Self {
+        // use Pest to parse the source text
+        let pairs = Self::parse(Rule::rym, &source).expect(
+            "error parsing: {:#?}"
+        );
 
-    fn root(&mut self) -> MaybeASTResult {
-        // what's allowed at root level?
-        self.parse_number()
-    }
-
-    fn parse_number(&mut self) -> MaybeASTResult {
-        // is the current token relevant to us?
-        if !self.tokens.is_number() {
-            // if not, return None to indicate that this is not our
-            // responsibility; it's up to the caller to decide if that's
-            // unexpected or not
-            return None;
-        };
-
-        // TODO: return an AST node of a literal number
-        Some(Ok(
-            ASTNode::from( self.tokens.consume() )
-        ))
+        Self{
+            pairs,
+        }
     }
 }
 
-impl<'t> Iterator for Parser<'t> {
-    type Item = ASTResult;
+use parser::ast::ASTNode;
 
-    fn next(&mut self) -> MaybeASTResult {
-        self.root()
+impl<'p> Iterator for RymParser<'p, Rule> {
+    type Item = ASTNode;
+
+    /// When you turn the crank on the parser, it spits out AST nodes.
+    fn next(&mut self) -> Option<Self::Item> {
+        Some(ASTNode::default())
     }
 }

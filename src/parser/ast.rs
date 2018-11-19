@@ -2,7 +2,6 @@
 // BSD 2-clause licence; see LICENSE.TXT
 
 use parser::error::*;
-use parser::token::{Token, TokenKind, TokenNumber};
 use std::convert::From;
 
 /// The "Abstract Syntax Tree" puts `Token`s together into meaningful
@@ -19,14 +18,17 @@ impl Default for AST {
     }
 }
 
-/// The AST is made up of a series of interconnected nodes.
+/// The AST is made up of a series of nodes where each node is a top-level
+/// "statement" and may contain descendants based on type. In practice,
+/// Retronym's top-level statements are either macros or lists.
 #[derive(Debug)]
 pub struct ASTNode {
-    pub kind: ASTNodeKind,
+    pub kind: ASTKind,
+    //TODO: include original source location
 }
 
 #[derive(Debug)]
-pub enum ASTNodeKind {
+pub enum ASTKind {
     /// An empty node, used for unimplemented node types
     Void,
     /// A single literal value
@@ -48,8 +50,37 @@ pub enum ASTValue {
 
 #[derive(Debug)]
 pub struct ASTExpr {
-    left: ASTValue,
-    right: ASTValue,
+    left: Box<ASTNode>,
+    op: ASTOperator,
+    right: Box<ASTNode>,
+}
+
+#[derive(Debug)]
+pub enum ASTOperator {
+    /// Addition operator "+"
+    Add,
+    /// Subtraction operator "-"
+    Sub,
+    /// Multiplication operator "*"
+    Mul,
+    /// Division operator "/"
+    Div,
+    /// Modulo operator "\\"
+    Mod,
+    /// Power/Exponention Operator "**"
+    Pow,
+    /// Bitwise eXclusive OR operator "^"
+    Xor,
+    /// Bitwise AND operator "&"
+    And,
+    /// Bitwise OR operator "|"
+    Or,
+    /// Bitwise SHift-Left operator "<<"
+    Shl,
+    /// Bitwise SHift-Right operator ">>"
+    Shr,
+    /// Repeat operator "x"
+    Rep,
 }
 
 /// During building of the `AST`, the methods return either a new `ASTNode` to
@@ -60,7 +91,7 @@ pub type MaybeASTResult = Option<ASTResult>;
 impl Default for ASTNode {
     fn default() -> Self {
         Self {
-            kind: ASTNodeKind::Void,
+            kind: ASTKind::Void,
         }
     }
 }
@@ -73,17 +104,18 @@ impl ASTNode {
 
     pub fn new_int(value: i64) -> ASTNode {
         Self {
-            kind: ASTNodeKind::Value(ASTValue::Int(value)),
+            kind: ASTKind::Value(ASTValue::Int(value)),
         }
     }
 
     pub fn new_float(value: f64) -> ASTNode {
         Self {
-            kind: ASTNodeKind::Value(ASTValue::Float(value)),
+            kind: ASTKind::Value(ASTValue::Float(value)),
         }
     }
 }
 
+/*
 // Convert a `Token` into an `ASTNode`
 impl<'t> From<&'t Token> for ASTNode {
     fn from(token: &'t Token) -> ASTNode {
@@ -93,6 +125,45 @@ impl<'t> From<&'t Token> for ASTNode {
             TokenKind::Num(TokenNumber::Float(f)) => ASTNode::new_float(f),
             _ => panic!(
                 "Token is not of a kind that can be converted into an ASTNode."
+            ),
+        }
+    }
+}
+*/
+
+//==============================================================================
+
+use std::fmt::{self, *};
+
+impl Display for ASTNode {
+    /// Pretty-prints an ASTNode (and its descendants),
+    /// essentially outputting normalised source code
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.kind)
+    }
+}
+
+impl Display for ASTKind {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ASTKind::Void => write!(f, "<VOID>"),
+            ASTKind::Value(v) => write!(f, "{}", v),
+            // TODO: this will obviously include sub-elements
+            ASTKind::List => write!(f, "()"),
+            _ => unimplemented!(
+                "ASTNodeKind kind does not have a Display implementation."
+            ),
+        }
+    }
+}
+
+impl Display for ASTValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ASTValue::Int(i) => write!(f, "{}", i),
+            ASTValue::Float(d) => write!(f, "{}", d),
+            _ => unimplemented!(
+                "ASTValue kind does not have a Display implementation."
             ),
         }
     }
