@@ -10,6 +10,8 @@ const _GRAMMAR: &'static str = include_str!("retronym.pest");
 
 use pest::Parser;
 
+// this will do all the macro work of turning our grammar file into a `parse`
+// method on the below structure. 
 #[derive(Parser)]
 #[grammar = "parser/retronym.pest"]
 pub struct RymParser<'p, R>{
@@ -31,6 +33,10 @@ impl<'p> RymParser<'p, Rule> {
         Self{
             pairs,
         }
+    }
+
+    fn parse_root(&self) {
+
     }
 }
 

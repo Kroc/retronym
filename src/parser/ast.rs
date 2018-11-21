@@ -4,15 +4,14 @@
 use parser::error::*;
 use std::convert::From;
 
-/// The "Abstract Syntax Tree" puts `Token`s together into meaningful
-/// relationships. Whilst the `TokenStream` only cares about the type of
-/// individual `Token`s, the AST recognises lists, expressions and other
-/// such multi-token structures.
+/// The "Abstract Syntax Tree" is a machine understandable respresentation of
+/// some source code. 
 pub struct AST {
     _nodes: Vec<ASTNode>,
 }
 
 impl Default for AST {
+    /// Gives you an empty AST structure.
     fn default() -> Self {
         AST { _nodes: Vec::new() }
     }
@@ -23,29 +22,34 @@ impl Default for AST {
 /// Retronym's top-level statements are either macros or lists.
 #[derive(Debug)]
 pub struct ASTNode {
+    /// The 'type' of the node, e.g. whether this is a literal number,
+    /// an expression, a macro invocation etc.
     pub kind: ASTKind,
+    /// The attached data for the node.
+    pub data: ASTData,
     //TODO: include original source location
 }
 
 #[derive(Debug)]
 pub enum ASTKind {
-    /// An empty node, used for unimplemented node types
+    /// An empty node, used for unimplemented node types.
     Void,
-    /// A single literal value
-    Value(ASTValue),
+    /// A literal value. The `data` field contains the actual value.
+    Value,
     /// A list of elements
     List,
     /// An experssion -- i.e. a calculation
-    Expr(ASTExpr),
+    Expr,
 }
 
-/// A node that produces a single value. This can be a numeric literal,
-/// such as "100" or a calculation.
 #[derive(Debug)]
-pub enum ASTValue {
+pub enum ASTData {
+    /// No data for this node.
+    None,
+    /// An integer literal value.
     Int(i64),
+    /// A floating point literal value.
     Float(f64),
-    Expr(Box<ASTExpr>),
 }
 
 #[derive(Debug)]
@@ -92,6 +96,7 @@ impl Default for ASTNode {
     fn default() -> Self {
         Self {
             kind: ASTKind::Void,
+            data: ASTData::None,
         }
     }
 }
@@ -104,32 +109,18 @@ impl ASTNode {
 
     pub fn new_int(value: i64) -> ASTNode {
         Self {
-            kind: ASTKind::Value(ASTValue::Int(value)),
+            kind: ASTKind::Value,
+            data: ASTData::Int(value),
         }
     }
 
     pub fn new_float(value: f64) -> ASTNode {
         Self {
-            kind: ASTKind::Value(ASTValue::Float(value)),
+            kind: ASTKind::Value,
+            data: ASTData::Float(value),
         }
     }
 }
-
-/*
-// Convert a `Token` into an `ASTNode`
-impl<'t> From<&'t Token> for ASTNode {
-    fn from(token: &'t Token) -> ASTNode {
-        // what kind of token is this?
-        match token.kind {
-            TokenKind::Num(TokenNumber::Int(i)) => ASTNode::new_int(i),
-            TokenKind::Num(TokenNumber::Float(f)) => ASTNode::new_float(f),
-            _ => panic!(
-                "Token is not of a kind that can be converted into an ASTNode."
-            ),
-        }
-    }
-}
-*/
 
 //==============================================================================
 
@@ -139,31 +130,25 @@ impl Display for ASTNode {
     /// Pretty-prints an ASTNode (and its descendants),
     /// essentially outputting normalised source code
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.kind)
-    }
-}
-
-impl Display for ASTKind {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
+        match self.kind {
             ASTKind::Void => write!(f, "<VOID>"),
-            ASTKind::Value(v) => write!(f, "{}", v),
+            ASTKind::Value => write!(f, "{}", self.data),
             // TODO: this will obviously include sub-elements
             ASTKind::List => write!(f, "()"),
             _ => unimplemented!(
-                "ASTNodeKind kind does not have a Display implementation."
+                "ASTKind kind does not have a Display implementation."
             ),
         }
     }
 }
 
-impl Display for ASTValue {
+impl Display for ASTData {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ASTValue::Int(i) => write!(f, "{}", i),
-            ASTValue::Float(d) => write!(f, "{}", d),
+            ASTData::Int(i) => write!(f, "{}", i),
+            ASTData::Float(d) => write!(f, "{}", d),
             _ => unimplemented!(
-                "ASTValue kind does not have a Display implementation."
+                "ASTData does not have a Display implementation."
             ),
         }
     }
