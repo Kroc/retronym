@@ -4,7 +4,7 @@
 use parser::error::*;
 
 /// The "Abstract Syntax Tree" is a machine understandable respresentation of
-/// some source code. 
+/// some source code.
 pub struct AST {
     _nodes: Vec<ASTNode>,
 }
@@ -49,6 +49,8 @@ pub enum ASTData {
     Int(i64),
     /// A floating point literal value.
     Float(f64),
+    /// A string literal.
+    Str(String),
 }
 
 #[derive(Debug)]

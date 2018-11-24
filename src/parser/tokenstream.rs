@@ -7,17 +7,16 @@
 
 use parser::parser::Rule;
 use parser::parser::RymParser;
-use pest::iterators::Pair;
-use pest::Parser;
-
-/// A `Token` is a single 'word' ("lexeme") of the source code.
-pub type Token<'t> = Pair<'t, Rule>;
+use parser::token::Token;
 
 /// A `TokenStream` wraps Pest's `Pairs` struct and presents an interface that
 /// is more directly informed of Retronym's grammar.
 pub struct TokenStream<'t> {
     tokens: Vec<Token<'t>>,
 }
+
+// required for the `parse` method of `RymParser` to be visible here.
+use pest::Parser;
 
 impl<'t> TokenStream<'t> {
     /// Creates a `TokenStream` directly from source code.
@@ -34,7 +33,7 @@ impl<'t> TokenStream<'t> {
         };
 
         for p in tokenstream.tokens.clone() {
-            println!("pair: {:?}", p);
+            println!("token: {:?}", p);
         }
 
         tokenstream

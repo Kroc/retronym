@@ -59,7 +59,6 @@ string          = @{ "\"" ~ text ~ "\"" }
 text            = @{ ( !"\"" ~ ANY )* }
 
 // an integer [decimal] number uses digits "0"-"9" but cannot begin with "0"
-// TODO: negative integers
 // TODO: float numbers
 
 int_number      = @{ "-"? ~ ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* }

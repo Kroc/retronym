@@ -21,7 +21,7 @@ impl Object {
 
         // crank the parser and churn out ASTNodes
         for n in parser {
-            println!("{}", n);
+            println!("{}", n.unwrap());
         }
 
         Object {
