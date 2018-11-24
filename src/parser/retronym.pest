@@ -15,24 +15,34 @@ comment         = _{ ";" ~ ( !NEWLINE ~ ANY )* ~ NEWLINE }
 
 rym             = _{ SOI ~ ( NEWLINE | comment | root )* ~ EOI }
 
-root            = !{ WHITESPACE* ~ list }
+root            = _{ WHITESPACE* ~ list }
 
 // almost everything in Retronym is an implicit list, commas are optional.
-// for example, strings are self-contained lists of bytes
-list            = _{ ( string | listexpr ) ~ ","? ~ list? }
+// for example, strings are self-contained lists of bytes. because macros
+// consume all list elements between it and the next macro, we won't enforce
+// list validity strongly here; we'll only concern ourselves with the terminals
+// and let the parser do the actual validation.
 
-// a list of expressions (single values)
-listexpr        = _{ expr ~ ( ","? ~ listexpr )?  }
+list            = _{ expr ~ ","? ~ list? }
 
 expr            = _{ value ~ ( operator ~ expr )? }
 
-value           = _{ keyword | atom | mac | number | deref }
+value           = _{
+                    string
+                |   keyword
+                |   atom
+                |   mac
+                |   number
+                |   deref
+                }
 
-keyword         = _{ "atom" | "macro" }
+//==============================================================================
 
-atom            = _{ ASCII_ALPHA_UPPER ~ ( ASCII_DIGIT | ASCII_ALPHA_UPPER )* }
+keyword         = { "atom" | "macro" }
 
-mac             = _{
+atom            = { ASCII_ALPHA_UPPER ~ ( ASCII_DIGIT | ASCII_ALPHA_UPPER )* }
+
+mac             = {
                     // cannot begin with a digit
                     ( ASCII_ALPHA_LOWER | "_" )
                     // underscores allowed, unlike Atoms
@@ -41,8 +51,6 @@ mac             = _{
                     // instructions, e.g. `lda# $FF`
                     ~ "#"?
                 }
-
-//==============================================================================
 
 // strings are obviously wrapped by speech-marks
 // but Retronym does not allow for escape codes

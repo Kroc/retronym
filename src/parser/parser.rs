@@ -8,45 +8,41 @@ const _GRAMMAR: &'static str = include_str!("retronym.pest");
 
 // build a parser using Pest:
 
-use pest::Parser;
-
 // this will do all the macro work of turning our grammar file into a `parse`
 // method on the below structure. 
 #[derive(Parser)]
 #[grammar = "parser/retronym.pest"]
-pub struct RymParser<'p, R>{
-    pairs: Pairs<'p, R>
+pub struct RymParser<'t>{
+    #[allow(dead_code)]
+    tokens: TokenStream<'t>,
 }
 
-use pest::iterators::Pairs;
+use parser::tokenstream::TokenStream;
+use parser::ast::{MaybeASTResult};
 
-impl<'p> RymParser<'p, Rule> {
+impl<'t> RymParser<'t> {
     /// NB: the string reference must live as long as the `RymParser`;
     /// that is, the source string you pass it will not deallocate until
     /// the RymParser does as well.
-    pub fn from_str(source: &'p str) -> Self {
-        // use Pest to parse the source text
-        let pairs = Self::parse(Rule::rym, &source).expect(
-            "error parsing: {:#?}"
-        );
-
+    pub fn from_str(source: &'t str) -> Self {
+        // build a parser struct
         Self{
-            pairs,
+            tokens: TokenStream::new_from_str(source),
         }
     }
 
-    fn parse_root(&self) {
-
+    pub fn parse_line() -> MaybeASTResult {
+        None
     }
 }
 
 use parser::ast::ASTNode;
 
-impl<'p> Iterator for RymParser<'p, Rule> {
+impl<'t> Iterator for RymParser<'t> {
     type Item = ASTNode;
 
     /// When you turn the crank on the parser, it spits out AST nodes.
     fn next(&mut self) -> Option<Self::Item> {
-        Some(ASTNode::default())
+        None
     }
 }

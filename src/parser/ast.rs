@@ -2,7 +2,6 @@
 // BSD 2-clause licence; see LICENSE.TXT
 
 use parser::error::*;
-use std::convert::From;
 
 /// The "Abstract Syntax Tree" is a machine understandable respresentation of
 /// some source code. 
