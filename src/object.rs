@@ -9,11 +9,11 @@
 use parser::ast::AST;
 use parser::parser::RymParser;
 
-pub struct Object {
-    _ast: AST,
+pub struct Object<'t> {
+    _ast: AST<'t>,
 }
 
-impl Object {
+impl<'t> Object<'t> {
     pub fn new_from_str(source: &str) -> Object {
         // create a parser from the token stream;
         // this will output AST nodes

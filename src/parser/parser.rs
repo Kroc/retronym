@@ -8,6 +8,8 @@ const _GRAMMAR: &'static str = include_str!("retronym.pest");
 
 // build a parser using Pest:
 
+use parser::tokenstream::TokenStream;
+
 // this will do all the macro work of turning our grammar file into a `parse`
 // method on the below structure.
 #[derive(Parser)]
@@ -17,30 +19,45 @@ pub struct RymParser<'t> {
     tokens: TokenStream<'t>,
 }
 
-use parser::ast::{ASTResult, MaybeASTResult};
-use parser::tokenstream::TokenStream;
+use parser::ast::{ASTNode, ASTResult, MaybeASTResult};
 
-impl<'t> RymParser<'t> {
+impl<'token> RymParser<'token> {
     /// NB: the string reference must live as long as the `RymParser`;
     /// that is, the source string you pass it will not deallocate until
     /// the RymParser does as well.
-    pub fn from_str(source: &'t str) -> Self {
+    pub fn from_str(source: &'token str) -> Self {
+        let tokens = TokenStream::new_from_str(source);
+
         // build a parser struct
-        Self {
-            tokens: TokenStream::new_from_str(source),
-        }
+        Self { tokens }
     }
 
-    fn parse_line(&self) -> MaybeASTResult {
-        None
+    fn parse_statement(&self) -> MaybeASTResult<'token> {
+        // a statement can be either a macro invocation (optionally followed
+        // by a list) or a list of expressions.
+        self.parse_macro()
+    }
+
+    /// Parse a macro invocation.
+    fn parse_macro(&self) -> MaybeASTResult<'token> {
+        // if the current token is not a macro, this is not our concern.
+        if !self.tokens.is_macro() {
+            return None;
+        }
+
+        let token = self.tokens.token().unwrap();
+
+        // build an ASTNode for a macro invocation.
+        // TODO: messy
+        Some(Ok(ASTNode::from(token)))
     }
 }
 
-impl<'t> Iterator for RymParser<'t> {
-    type Item = ASTResult;
+impl<'token> Iterator for RymParser<'token> {
+    type Item = ASTResult<'token>;
 
     /// When you turn the crank on the parser, it spits out AST nodes.
-    fn next(&mut self) -> Option<ASTResult> {
-        self.parse_line()
+    fn next(&mut self) -> Option<ASTResult<'token>> {
+        self.parse_statement()
     }
 }
