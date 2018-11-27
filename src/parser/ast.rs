@@ -1,7 +1,7 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use parser::error::*;
+use crate::parser::error::*;
 
 /// The "Abstract Syntax Tree" is a machine understandable respresentation of
 /// some source code. Because `ASTNode`s can contain a reference back to the
@@ -18,7 +18,7 @@ impl<'token> Default for AST<'token> {
     }
 }
 
-use parser::token::MaybeToken;
+use crate::parser::token::MaybeToken;
 
 /// The AST is made up of a series of nodes where each node is a top-level
 /// "statement" and may contain descendants based on type. In practice,
@@ -26,11 +26,11 @@ use parser::token::MaybeToken;
 #[derive(Debug)]
 pub struct ASTNode<'token> {
     /// The 'type' of the node, e.g. whether this is a literal number,
-    /// an expression, a macro invocation etc.
+    /// an expression, a macro invocation etc. This can contain nested nodes!
     pub kind: ASTKind<'token>,
     /// An optional reference back to the original source code,
     /// for error messages.
-    token: MaybeToken<'token>,
+    pub token: MaybeToken<'token>,
 }
 
 #[derive(Debug)]
@@ -59,9 +59,9 @@ pub enum ASTValue {
 
 #[derive(Debug)]
 pub struct ASTExpr<'token> {
-    left: ASTNode<'token>,
-    op: ASTOperator,
-    right: ASTNode<'token>,
+    pub left: ASTNode<'token>,
+    pub op: ASTOperator,
+    pub right: ASTNode<'token>,
 }
 
 #[derive(Debug)]
@@ -108,12 +108,12 @@ impl<'token> Default for ASTNode<'token> {
 
 //==============================================================================
 
-use parser::parser::Rule;
-use parser::token::Token;
+use crate::parser::parser::Rule;
+use crate::parser::token::Token;
 use std::convert::From;
 
 impl<'token> From<Token<'token>> for ASTNode<'token> {
-    fn from(token: Token<'token>) -> ASTNode {
+    fn from(token: Token<'token>) -> ASTNode<'_> {
         ASTNode {
             kind: match token.as_rule() {
                 // parse an integer number:
@@ -156,7 +156,7 @@ use std::fmt::{self, *};
 impl<'token> Display for ASTNode<'token> {
     /// Pretty-prints an ASTNode (and its descendants),
     /// essentially outputting normalised source code
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.kind {
             ASTKind::Void => write!(f, "<VOID>"),
             ASTKind::Value(_) => write!(f, "{}", self.kind),
@@ -168,7 +168,7 @@ impl<'token> Display for ASTNode<'token> {
 }
 
 impl<'token> Display for ASTKind<'token> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ASTKind::Value(v) => match v {
                 ASTValue::Int(i) => write!(f, "{}", i),

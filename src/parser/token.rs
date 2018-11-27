@@ -5,7 +5,7 @@
 //! interaction from the AST. The `token` module wraps the core parsing output
 //! of Pest, hiding the macro-generated `Rule`s from token consumers.
 
-use parser::parser::Rule;
+use crate::parser::parser::Rule;
 use pest::iterators::Pair;
 use pest::Span;
 
@@ -49,7 +49,7 @@ impl<'t> Token<'t> {
 use std::fmt::{self, *};
 
 impl<'token> Display for Token<'token> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }
 }
@@ -74,9 +74,7 @@ impl<'t> Token<'t> {
     /// Is this a number literal?
     pub fn is_number(&self) -> bool {
         match self.as_rule() {
-            Rule::int_number => true,
-            Rule::hex_number => true,
-            Rule::bin_number => true,
+            Rule::int_number | Rule::hex_number | Rule::bin_number => true,
             _ => false,
         }
     }
@@ -95,9 +93,39 @@ impl<'t> Token<'t> {
     /// value.
     pub fn is_value(&self) -> bool {
         match self.as_rule() {
-            Rule::int_number => true,
-            Rule::hex_number => true,
-            Rule::bin_number => true,
+            Rule::int_number | Rule::hex_number | Rule::bin_number => true,
+            _ => false,
+        }
+    }
+
+    /// Is this a valid opening token for an expression? This wouldn't include
+    /// operators because an expression cannot begin with an operator.
+    pub fn is_expr(&self) -> bool {
+        match self.as_rule() {
+            Rule::atom
+            | Rule::int_number
+            | Rule::hex_number
+            | Rule::bin_number
+            | Rule::string => true,
+            _ => false,
+        }
+    }
+
+    /// Is this an operator?
+    pub fn is_oper(&self) -> bool {
+        match self.as_rule() {
+            Rule::op_pow
+            | Rule::op_add
+            | Rule::op_sub
+            | Rule::op_mul
+            | Rule::op_div
+            | Rule::op_mod
+            | Rule::op_xor
+            | Rule::op_and
+            | Rule::op_or
+            | Rule::op_shl
+            | Rule::op_shr
+            | Rule::op_rep => true,
             _ => false,
         }
     }

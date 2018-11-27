@@ -6,15 +6,15 @@
 //! a binary file, given a set of imports (from other Objects) to 'fill in the
 //! blanks'.
 
-use parser::ast::AST;
-use parser::parser::RymParser;
+use crate::parser::ast::AST;
+use crate::parser::parser::RymParser;
 
 pub struct Object<'t> {
     _ast: AST<'t>,
 }
 
 impl<'t> Object<'t> {
-    pub fn new_from_str(source: &str) -> Object {
+    pub fn new_from_str(source: &str) -> Object<'_> {
         // create a parser from the token stream;
         // this will output AST nodes
         let parser = RymParser::from_str(source);

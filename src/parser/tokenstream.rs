@@ -5,9 +5,9 @@
 //! into a continuous stream of "tokens", the individual 'words' of the source
 //! code.
 
-use parser::parser::Rule;
-use parser::parser::RymParser;
-use parser::token::{Token, Tokens};
+use crate::parser::parser::Rule;
+use crate::parser::parser::RymParser;
+use crate::parser::token::{Token, Tokens};
 
 /// A `TokenStream` wraps Pest's `Pairs` struct and presents an interface that
 /// is more directly informed of Retronym's grammar.
@@ -20,7 +20,7 @@ pub struct TokenStream<'token> {
 // required for the `parse` method of `RymParser` to be visible here.
 use pest::Parser;
 
-use parser::token::MaybeToken;
+use crate::parser::token::MaybeToken;
 
 impl<'token> TokenStream<'token> {
     /// Creates a `TokenStream` directly from source code.
@@ -32,7 +32,7 @@ impl<'token> TokenStream<'token> {
             tokens: RymParser::parse(Rule::rym, &source)
                 .expect("error parsing: {:#?}")
                 // convert Pest `Pairs` into `Token`s
-                .map(|p| Token::from(p))
+                .map(Token::from)
                 // collect the `Token`s into a Vector as we want to be able
                 // to easily reference the 'current' token regularly
                 .collect(),
@@ -63,15 +63,32 @@ impl<'token> TokenStream<'token> {
 
     pub fn is_macro(&self) -> bool {
         match self.tokens.get(self.index) {
-            None => false,
             Some(t) => t.is_macro(),
+            None => false,
+        }
+    }
+
+    pub fn is_expr(&self) -> bool {
+        match self.tokens.get(self.index) {
+            Some(t) => t.is_expr(),
+            None => false,
+        }
+    }
+
+    pub fn is_oper(&self) -> bool {
+        match self.tokens.get(self.index) {
+            Some(t) => t.is_oper(),
+            None => false,
         }
     }
 
     /// Returns the current token, and (internally) moves to the next.
-    pub fn consume(&mut self) -> Option<&Token> {
+    pub fn consume(&mut self) -> Option<Token<'token>> {
         let token = self.tokens.get(self.index);
         self.index += 1;
-        token
+        match token {
+            Some(t) => Some(t.clone()),
+            None => None,
+        }
     }
 }

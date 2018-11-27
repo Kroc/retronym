@@ -113,7 +113,6 @@ op_or           = { "|" }   // or
 op_shl          = { "<<" }  // shift-left
 op_shr          = { ">>" }  // shift-right
 
-
 op_rep          = { "x" }   // repeat (for building a list)
 
 // dereference (operator?)

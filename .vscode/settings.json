@@ -23,9 +23,6 @@
         "target/": true,
         "Cargo.lock": true
     },
-    "rust.features": [
-        "doc"
-    ],
     "spellright.language": [
         ""
     ],

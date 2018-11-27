@@ -64,7 +64,7 @@ impl StdError for Error {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match *self.0 {
             // Test Error does not contain any error-specific data
             ErrorKind::Test => None,
@@ -76,7 +76,7 @@ impl StdError for Error {
 }
 
 impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self.0 {
             ErrorKind::Test => write!(f, "TEST ERROR"),
             ErrorKind::Io(ref err) => err.fmt(f),

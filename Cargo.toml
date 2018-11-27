@@ -5,6 +5,7 @@
 name = "retronym"
 version = "0.0.0"
 authors = ["Kroc Camen <kroc@camendesign.com>"]
+edition = "2018"
 
 [dependencies]
 pest = "2.0.2"

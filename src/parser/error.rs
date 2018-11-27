@@ -65,8 +65,8 @@ impl ParseError {
 
     pub fn is_endoffile(&self) -> bool {
         match *self.0 {
-                ParseErrorKind::EndOfFile => true,
-                _ => false,
+            ParseErrorKind::EndOfFile => true,
+            _ => false,
         }
     }
 
@@ -94,7 +94,7 @@ impl StdError for ParseError {
         }
     }
 
-    fn cause(&self) -> Option<&StdError> {
+    fn cause(&self) -> Option<&dyn StdError> {
         match *self.0 {
             ParseErrorKind::Unimplemented => None,
             // should this return the file name?
@@ -107,7 +107,7 @@ impl StdError for ParseError {
 }
 
 impl fmt::Display for ParseError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self.0 {
             ParseErrorKind::Unimplemented => write!(f, "Unimplemented"),
             ParseErrorKind::EndOfFile => write!(f, "End Of File"),
