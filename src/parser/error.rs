@@ -20,13 +20,6 @@ pub struct ParseError(Box<ParseErrorKind>);
 /// The specific type of an error:
 #[derive(Debug)]
 pub enum ParseErrorKind {
-    /// During the parsing process different possible outcomes are tested and
-    /// our parse methods will return the "Unrecognized" error when the current
-    /// token doesn't apply to them; for example, if we attempt to parse an
-    /// expression, but the current token is a macro. It's up to the caller
-    /// to decide if the error is actually unexpected or not.  
-    Unrecognized,
-
     /// "End Of File" error. This occurs when reading tokens and you reach
     /// the end. It's up to the caller to decide if this is "unexpected".
     EndOfFile,
@@ -57,12 +50,6 @@ pub(crate) fn parse_error(kind: ParseErrorKind) -> ParseError {
 pub type ParseResult<T> = result::Result<T, ParseError>;
 
 impl ParseError {
-    /// Create an `Unrecognized` error.
-    #[allow(dead_code)]
-    pub(crate) fn unrecognized() -> Self {
-        ParseError(Box::new(ParseErrorKind::Unrecognized))
-    }
-
     /// Create an `EndOfFile` error.
     #[allow(dead_code)]
     pub(crate) fn end_of_file() -> Self {
@@ -79,14 +66,6 @@ impl ParseError {
     pub fn into_kind(self) -> ParseErrorKind {
         // dereference the embedded error
         *self.0
-    }
-
-    /// Is this an "Unrecognized" error?
-    pub fn is_unrecognized(&self) -> bool {
-        match *self.0 {
-            ParseErrorKind::Unrecognized => true,
-            _ => false,
-        }
     }
 
     pub fn is_endoffile(&self) -> bool {
@@ -123,7 +102,6 @@ impl StdError for ParseError {
     fn cause(&self) -> Option<&dyn StdError> {
         match *self.0 {
             ParseErrorKind::Unimplemented => None,
-            ParseErrorKind::Unrecognized => None,
             ParseErrorKind::EndOfFile => None,
             ParseErrorKind::Io(ref err) => Some(err),
             ParseErrorKind::ParseInt(ref err) => Some(err),
@@ -136,7 +114,6 @@ impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self.0 {
             ParseErrorKind::Unimplemented => write!(f, "Unimplemented"),
-            ParseErrorKind::Unrecognized => write!(f, "Unrecognized"),
             ParseErrorKind::EndOfFile => write!(f, "End Of File"),
             ParseErrorKind::Io(ref err) => err.fmt(f),
             ParseErrorKind::ParseInt(ref err) => err.fmt(f),

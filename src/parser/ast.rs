@@ -113,14 +113,19 @@ pub enum ASTOperator {
 
 /// During building of the `AST`, the methods return either a new `ASTNode` to
 /// attach to the `AST`, or a `ParseError`.
-pub type ASTResult<'token> = ParseResult<ASTNode<'token>>;
-pub type MaybeASTResult<'token> = Option<ASTResult<'token>>;
+pub type ASTResult<'token> = ParseResult<Option<ASTNode<'token>>>;
 
 impl From<ParseError> for ASTResult<'_> {
     /// For brevity, allow conversion of a ParseError to an ASTResult,
     /// i.e. `Result<Err(ParseError)>`.
     fn from(parse_error: ParseError) -> Self {
         Err(parse_error)
+    }
+}
+
+impl<'token> From<ASTNode<'token>> for ASTResult<'token> {
+    fn from(ast_node: ASTNode<'token>) -> Self {
+        Ok(Some(ast_node))
     }
 }
 

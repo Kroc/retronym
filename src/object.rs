@@ -22,7 +22,10 @@ impl<'t> Object<'t> {
         // crank the parser and churn out ASTNodes
         for n in parser {
             match n {
-                Ok(ref a) => println!("{}", a),
+                Ok(ref o) => match o {
+                    Some(a) => println!("{}", a),
+                    None => panic!(),
+                },
                 Err(e) => println!("ERROR: {}", e),
             }
         }

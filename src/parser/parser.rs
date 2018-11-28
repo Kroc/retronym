@@ -36,27 +36,32 @@ impl<'token> RymParser<'token> {
     }
 
     fn parse_statement(&mut self) -> ASTResult<'token> {
-        if self.tokens.is_macro() { return self.parse_macro() }
-        if self.tokens.is_expr() { return self.parse_expr() }
-        ASTResult::from(ParseError::unrecognized())
+        if self.tokens.is_macro() {
+            return self.parse_macro();
+        }
+        if self.tokens.is_expr() {
+            return self.parse_expr();
+        }
+        Ok(None)
     }
 
     /// Parse a macro invocation.
     fn parse_macro(&mut self) -> ASTResult<'token> {
         // well, if there are no tokens, this can't be a macro
         if self.tokens.is_eof() {
-            return ASTResult::from(ParseError::end_of_file());
+            return Ok(None);
         }
 
-        // if the current token is not a macro, this is not our concern.
+        // if the current token is not a macro,
+        // this is not our concern.
         if !self.tokens.is_macro() {
-            return ASTResult::from(ParseError::unrecognized());
+            return Ok(None);
         }
 
         // build an ASTNode for a macro invocation.
         // TODO: messy
         let token = self.tokens.consume().unwrap();
-        Ok(ASTNode::from(token))
+        ASTResult::from(ASTNode::from(token))
     }
 
     /// Parse an expression, returning an AST node representing that expression.
@@ -68,17 +73,17 @@ impl<'token> RymParser<'token> {
     fn parse_expr(&mut self) -> ASTResult<'token> {
         // well, if there are no tokens, this can't be an expression
         if self.tokens.is_eof() {
-            return ASTResult::from(ParseError::end_of_file());
+            return Ok(None);
         }
 
         // if the current token is not valid for the beginning of an
         // expression (values only), then return 'unrecognised'
         if !self.tokens.is_expr() {
-            return ASTResult::from(ParseError::unrecognized());
+            return Ok(None);
         }
 
         // put aside the current token; we need to check for a following
-        // operator that defines an expression. this token us guaranteed
+        // operator that defines an expression. this token is guaranteed
         // to exist (for `unwrap`) because of the `is_eof` check earlier
         let left = self.tokens.consume().unwrap();
 
@@ -88,7 +93,7 @@ impl<'token> RymParser<'token> {
             // skip the Expr AST node. this brings an end to any recursion;
             // the top most call will receive a single AST node containing
             // descending child nodes
-            return Ok(ASTNode::from(left));
+            return ASTResult::from(ASTNode::from(left));
         }
 
         // save the operator, move to the next token
@@ -98,22 +103,34 @@ impl<'token> RymParser<'token> {
         // e.g. `1 + 2 + 3` is equivilent to `1 + (2 + 3)`. if a terminal
         // follows (i.e. a value) then the return from recursing here will
         // be an AST node containing a single value and not another expression
-        let right = self.parse_expr();
-
-        match right {
-            // forward any error to the caller
-            Err(e) => Err(e),
-            // wrap up the AST node we recevied with
-            // the value and operator we took before
-            Ok(ast_node) => Ok(ASTNode::new_expr(
-                // left hand side:
-                ASTNode::from(left),
-                // convert op token to op enum:
-                oper,
-                // right hand side:
-                ast_node,
-            )),
-        }
+        //
+        // the recursion here returns an `ASTResult` -- a `Result` containing
+        // an `Option`; therefore `Err`, `None`, or an `ASTNode`.
+        //
+        // if retrieving the right-hand-side errored,
+        // pass that error up (`and_then` returns `Err` early)
+        self.parse_expr().and_then(|option| match option {
+            // for a non-error result, check for `None` or `ASTNode`,
+            // where `None` means that there was no match -- in this case,
+            // we have an operator without a following value! promote this
+            // to a hard error:
+            None => ASTResult::from(ParseError::end_of_file()),
+            // the AST node returned is the right-hand-side of the expression,
+            // we still need to combine it with the left-hand-side value and
+            // the operator!
+            Some(ast_node) => {
+                // construct an expression node containing
+                // the left & right nodes + the operator:
+                ASTResult::from(ASTNode::new_expr(
+                    // left hand side:
+                    ASTNode::from(left),
+                    // op token:
+                    oper,
+                    // right hand side:
+                    ast_node,
+                ))
+            }
+        })
     }
 }
 
@@ -122,11 +139,13 @@ impl<'token> Iterator for RymParser<'token> {
 
     /// When you turn the crank on the parser, it spits out AST nodes.
     fn next(&mut self) -> Option<ASTResult<'token>> {
-        let stmt = self.parse_statement();
-
-        match stmt {
-            Err(ref e) if e.is_endoffile() | e.is_unrecognized() => None,
-            _ => Some(stmt),
-        }
+        match self.parse_statement() {
+            // pass errors through
+            Err(e) => Some(Err(e)),
+            Ok(option) => match option {
+                Some(ast_node) => Some(ASTResult::from(ast_node)),
+                None => None,
+            }
+        } 
     }
 }
