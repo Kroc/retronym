@@ -36,12 +36,18 @@ impl<'token> RymParser<'token> {
     }
 
     fn parse_statement(&mut self) -> ASTResult<'token> {
-        self.parse_macro()?;
-        self.parse_expr()
+        if self.tokens.is_macro() { return self.parse_macro() }
+        if self.tokens.is_expr() { return self.parse_expr() }
+        ASTResult::from(ParseError::unrecognized())
     }
 
     /// Parse a macro invocation.
     fn parse_macro(&mut self) -> ASTResult<'token> {
+        // well, if there are no tokens, this can't be a macro
+        if self.tokens.is_eof() {
+            return ASTResult::from(ParseError::end_of_file());
+        }
+
         // if the current token is not a macro, this is not our concern.
         if !self.tokens.is_macro() {
             return ASTResult::from(ParseError::unrecognized());
@@ -76,8 +82,8 @@ impl<'token> RymParser<'token> {
         // to exist (for `unwrap`) because of the `is_eof` check earlier
         let left = self.tokens.consume().unwrap();
 
-        // is there an operator?
-        if !self.tokens.is_oper() {
+        // is there any token following, is it an operator?
+        if self.tokens.is_eof() | !self.tokens.is_oper() {
             // no: this is a single value rather than an expression, we can
             // skip the Expr AST node. this brings an end to any recursion;
             // the top most call will receive a single AST node containing
@@ -99,16 +105,14 @@ impl<'token> RymParser<'token> {
             Err(e) => Err(e),
             // wrap up the AST node we recevied with
             // the value and operator we took before
-            Ok(ast_node) => Ok(
-                ASTNode::new_expr(
-                    // left hand side:
-                    ASTNode::from(left),
-                    // convert op token to op enum:
-                    oper,
-                    // right hand side:
-                    ast_node,
-                )
-            ),
+            Ok(ast_node) => Ok(ASTNode::new_expr(
+                // left hand side:
+                ASTNode::from(left),
+                // convert op token to op enum:
+                oper,
+                // right hand side:
+                ast_node,
+            )),
         }
     }
 }
@@ -118,6 +122,11 @@ impl<'token> Iterator for RymParser<'token> {
 
     /// When you turn the crank on the parser, it spits out AST nodes.
     fn next(&mut self) -> Option<ASTResult<'token>> {
-        Some(self.parse_statement())
+        let stmt = self.parse_statement();
+
+        match stmt {
+            Err(ref e) if e.is_endoffile() | e.is_unrecognized() => None,
+            _ => Some(stmt),
+        }
     }
 }

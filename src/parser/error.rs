@@ -123,7 +123,7 @@ impl StdError for ParseError {
     fn cause(&self) -> Option<&dyn StdError> {
         match *self.0 {
             ParseErrorKind::Unimplemented => None,
-            // should this return the file name?
+            ParseErrorKind::Unrecognized => None,
             ParseErrorKind::EndOfFile => None,
             ParseErrorKind::Io(ref err) => Some(err),
             ParseErrorKind::ParseInt(ref err) => Some(err),
@@ -136,6 +136,7 @@ impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self.0 {
             ParseErrorKind::Unimplemented => write!(f, "Unimplemented"),
+            ParseErrorKind::Unrecognized => write!(f, "Unrecognized"),
             ParseErrorKind::EndOfFile => write!(f, "End Of File"),
             ParseErrorKind::Io(ref err) => err.fmt(f),
             ParseErrorKind::ParseInt(ref err) => err.fmt(f),

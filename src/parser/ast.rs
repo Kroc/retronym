@@ -225,26 +225,47 @@ impl Display for ASTNode<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.kind {
             ASTKind::Void => write!(f, "<VOID>"),
-            ASTKind::Value(_) => write!(f, "{}", self.kind),
-            _ => unimplemented!(
-                "ASTKind kind does not have a Display implementation."
-            ),
+            ASTKind::Expr(ref x) => write!(f, "{}", x),
+            ASTKind::Atom(ref a) => write!(f, "{}", a),
+            ASTKind::Macro(ref m) => write!(f, "{}", m),
+            ASTKind::Value(ref v) => write!(f, "{}", v),
         }
     }
 }
 
-impl Display for ASTKind<'_> {
+impl Display for ASTValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ASTKind::Value(v) => match v {
                 ASTValue::Int(i) => write!(f, "{}", i),
                 ASTValue::Float(d) => write!(f, "{}", d),
                 ASTValue::Str(s) => write!(f, "{}", s),
-            },
-            _ => unimplemented!(
-                "ASTData does not have a Display implementation."
-            ),
         }
+    }
+}
+
+impl<'token> Display for ASTExpr<'token> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // TODO: ASTOperator to string
+        write!(f, "({} {} {})", self.left, self.oper, self.right)
+    }
+}
+
+impl Display for ASTOperator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", match self {
+            ASTOperator::Add => "+",
+            ASTOperator::Sub => "-",
+            ASTOperator::Mul => "*",
+            ASTOperator::Div => "/",
+            ASTOperator::Mod => r"\\",
+            ASTOperator::Pow => "**",
+            ASTOperator::Xor => "^",
+            ASTOperator::And => "&",
+            ASTOperator::Or => "|",
+            ASTOperator::Shl => "<<",
+            ASTOperator::Shr => ">>",
+            ASTOperator::Rep => "x",
+        })
     }
 }
 
