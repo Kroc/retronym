@@ -49,8 +49,7 @@ pub enum ParseErrorKind {
 }
 
 /// A crate-private constructor for `ParseError`.
-pub fn parse_error(kind: ParseErrorKind) -> ParseError {
-    // use `pub(crate)` when it stabilizes
+pub(crate) fn parse_error(kind: ParseErrorKind) -> ParseError {
     ParseError(Box::new(kind))
 }
 
@@ -58,28 +57,41 @@ pub fn parse_error(kind: ParseErrorKind) -> ParseError {
 pub type ParseResult<T> = result::Result<T, ParseError>;
 
 impl ParseError {
-    /// Return the specific type of this error
+    /// Create an `Unrecognized` error.
+    #[allow(dead_code)]
+    pub(crate) fn unrecognized() -> Self {
+        ParseError(Box::new(ParseErrorKind::Unrecognized))
+    }
+
+    /// Create an `EndOfFile` error.
+    #[allow(dead_code)]
+    pub(crate) fn end_of_file() -> Self {
+        ParseError(Box::new(ParseErrorKind::EndOfFile))
+    }
+
+    /// Return the specific type of this error.
     pub fn kind(&self) -> &ParseErrorKind {
         // return the embedded error
         &self.0
     }
 
-    /// Unwrap this error into its underlying type
+    /// Unwrap this error into its underlying type.
     pub fn into_kind(self) -> ParseErrorKind {
         // dereference the embedded error
         *self.0
     }
 
-    pub fn is_endoffile(&self) -> bool {
+    /// Is this an "Unrecognized" error?
+    pub fn is_unrecognized(&self) -> bool {
         match *self.0 {
-            ParseErrorKind::EndOfFile => true,
+            ParseErrorKind::Unrecognized => true,
             _ => false,
         }
     }
 
-    pub fn is_unrecognized(&self) -> bool {
+    pub fn is_endoffile(&self) -> bool {
         match *self.0 {
-            ParseErrorKind::Unrecognized => true,
+            ParseErrorKind::EndOfFile => true,
             _ => false,
         }
     }

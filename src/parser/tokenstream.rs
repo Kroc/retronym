@@ -53,6 +53,10 @@ impl<'token> TokenStream<'token> {
         self.index += 1;
     }
 
+    pub fn is_eof(&self) -> bool {
+        self.tokens.get(self.index).is_none()
+    }
+
     /// Returns the 'current' token.
     pub fn token(&self) -> MaybeToken<'token> {
         match self.tokens.get(self.index) {

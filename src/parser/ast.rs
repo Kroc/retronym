@@ -11,12 +11,14 @@ pub struct AST<'token> {
     _nodes: Vec<ASTNode<'token>>,
 }
 
-impl<'token> Default for AST<'token> {
+impl Default for AST<'_> {
     /// Gives you an empty AST structure.
     fn default() -> Self {
         AST { _nodes: Vec::new() }
     }
 }
+
+//==============================================================================
 
 use crate::parser::token::MaybeToken;
 
@@ -64,6 +66,23 @@ pub struct ASTExpr<'token> {
     pub right: ASTNode<'token>,
 }
 
+impl<'token> ASTExpr<'token> {
+    fn new(
+        left: ASTNode<'token>,
+        oper: &Token<'token>,
+        right: ASTNode<'token>,
+    ) -> Self {
+        ASTExpr {
+            // left hand side:
+            left: left,
+            // convert op token to op enum:
+            oper: ASTOperator::from(oper),
+            // right hand side:
+            right: right,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum ASTOperator {
     /// Addition operator "+"
@@ -97,11 +116,36 @@ pub enum ASTOperator {
 pub type ASTResult<'token> = ParseResult<ASTNode<'token>>;
 pub type MaybeASTResult<'token> = Option<ASTResult<'token>>;
 
-impl<'token> Default for ASTNode<'token> {
+impl From<ParseError> for ASTResult<'_> {
+    /// For brevity, allow conversion of a ParseError to an ASTResult,
+    /// i.e. `Result<Err(ParseError)>`.
+    fn from(parse_error: ParseError) -> Self {
+        Err(parse_error)
+    }
+}
+
+//------------------------------------------------------------------------------
+
+impl Default for ASTNode<'_> {
     fn default() -> Self {
         Self {
             kind: ASTKind::Void,
             token: None,
+        }
+    }
+}
+
+impl<'token> ASTNode<'token> {
+    pub fn new_expr(
+        left: ASTNode<'token>,
+        oper: Token<'token>,
+        right: ASTNode<'token>,
+    ) -> Self {
+        Self{
+            kind: ASTKind::Expr(Box::new(
+                ASTExpr::new(left, &oper, right)
+            )),
+            token: Some(oper),
         }
     }
 }
@@ -166,7 +210,7 @@ impl From<&Token<'_>> for ASTOperator {
             Rule::op_shl => ASTOperator::Shl,
             Rule::op_shr => ASTOperator::Shr,
             Rule::op_rep => ASTOperator::Rep,
-            _ => panic!("Not an operator token!")
+            _ => panic!("Not an operator token!"),
         }
     }
 }
@@ -175,7 +219,7 @@ impl From<&Token<'_>> for ASTOperator {
 
 use std::fmt::{self, *};
 
-impl<'token> Display for ASTNode<'token> {
+impl Display for ASTNode<'_> {
     /// Pretty-prints an ASTNode (and its descendants),
     /// essentially outputting normalised source code
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -189,7 +233,7 @@ impl<'token> Display for ASTNode<'token> {
     }
 }
 
-impl<'token> Display for ASTKind<'token> {
+impl Display for ASTKind<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ASTKind::Value(v) => match v {
@@ -203,3 +247,6 @@ impl<'token> Display for ASTKind<'token> {
         }
     }
 }
+
+//==============================================================================
+

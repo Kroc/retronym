@@ -14,17 +14,16 @@ use crate::parser::tokenstream::TokenStream;
 // method on the below structure.
 #[derive(Parser)]
 #[grammar = "parser/retronym.pest"]
-pub struct RymParser<'t> {
+pub struct RymParser<'token> {
     #[allow(dead_code)]
-    tokens: TokenStream<'t>,
+    tokens: TokenStream<'token>,
 }
 
-use crate::parser::ast::{ASTExpr, ASTKind, ASTOperator};
 use crate::parser::ast::{ASTNode, ASTResult};
 use crate::parser::error::*;
 
 impl<'token> RymParser<'token> {
-    // note that we cannot implement `FromStr` due to the lifetime requirement.
+    // note that we cannot implement `FromStr` due to the lifetime requirement?
     #[allow(clippy::should_implement_trait)]
     /// NB: the string reference must live as long as the `RymParser`;
     /// that is, the source string you pass it will not deallocate until
@@ -45,7 +44,7 @@ impl<'token> RymParser<'token> {
     fn parse_macro(&mut self) -> ASTResult<'token> {
         // if the current token is not a macro, this is not our concern.
         if !self.tokens.is_macro() {
-            return Err(parse_error(ParseErrorKind::Unrecognized));
+            return ASTResult::from(ParseError::unrecognized());
         }
 
         // build an ASTNode for a macro invocation.
@@ -61,20 +60,26 @@ impl<'token> RymParser<'token> {
     /// returns an `ASTResult` of either an `ASTNode` built from the expression,
     /// or the error encountered.
     fn parse_expr(&mut self) -> ASTResult<'token> {
-        // if the current token is not valid for the beginning of an expression
-        // (values only), then return `None` as our 'unrecognised' response
+        // well, if there are no tokens, this can't be an expression
+        if self.tokens.is_eof() {
+            return ASTResult::from(ParseError::end_of_file());
+        }
+
+        // if the current token is not valid for the beginning of an
+        // expression (values only), then return 'unrecognised'
         if !self.tokens.is_expr() {
-            return Err(parse_error(ParseErrorKind::Unrecognized));;
+            return ASTResult::from(ParseError::unrecognized());
         }
 
         // put aside the current token; we need to check for a following
-        // operator that defines an expression
+        // operator that defines an expression. this token us guaranteed
+        // to exist (for `unwrap`) because of the `is_eof` check earlier
         let left = self.tokens.consume().unwrap();
 
         // is there an operator?
         if !self.tokens.is_oper() {
             // no: this is a single value rather than an expression, we can
-            // skip the Expr AST node. this brings an end to any recursion,
+            // skip the Expr AST node. this brings an end to any recursion;
             // the top most call will receive a single AST node containing
             // descending child nodes
             return Ok(ASTNode::from(left));
@@ -94,19 +99,16 @@ impl<'token> RymParser<'token> {
             Err(e) => Err(e),
             // wrap up the AST node we recevied with
             // the value and operator we took before
-            Ok(ast_node) => Ok(ASTNode {
-                kind: ASTKind::Expr(Box::new(ASTExpr {
+            Ok(ast_node) => Ok(
+                ASTNode::new_expr(
                     // left hand side:
-                    left: ASTNode::from(left),
+                    ASTNode::from(left),
                     // convert op token to op enum:
-                    oper: ASTOperator::from(&oper),
+                    oper,
                     // right hand side:
-                    right: ast_node,
-                })),
-                // the source code position will be that of the operator
-                // -- the left & right nodes have their own references
-                token: Some(oper),
-            }),
+                    ast_node,
+                )
+            ),
         }
     }
 }
