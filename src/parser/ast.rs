@@ -60,7 +60,7 @@ pub enum ASTValue {
 #[derive(Debug)]
 pub struct ASTExpr<'token> {
     pub left: ASTNode<'token>,
-    pub op: ASTOperator,
+    pub oper: ASTOperator,
     pub right: ASTNode<'token>,
 }
 
@@ -93,7 +93,7 @@ pub enum ASTOperator {
 }
 
 /// During building of the `AST`, the methods return either a new `ASTNode` to
-/// attach to the `AST`, or an `Error`.
+/// attach to the `AST`, or a `ParseError`.
 pub type ASTResult<'token> = ParseResult<ASTNode<'token>>;
 pub type MaybeASTResult<'token> = Option<ASTResult<'token>>;
 
@@ -145,6 +145,28 @@ impl<'token> From<Token<'token>> for ASTNode<'token> {
             // embed the original token with the source-code location.
             // this'll be used if we need to print an error message.
             token: Some(token),
+        }
+    }
+}
+
+impl From<&Token<'_>> for ASTOperator {
+    /// Convert a token into an `ASTOperator` enum.
+    /// Panics if using a token that is not an operator!
+    fn from(token: &Token<'_>) -> Self {
+        match token.as_rule() {
+            Rule::op_add => ASTOperator::Add,
+            Rule::op_sub => ASTOperator::Sub,
+            Rule::op_mul => ASTOperator::Mul,
+            Rule::op_div => ASTOperator::Div,
+            Rule::op_mod => ASTOperator::Mod,
+            Rule::op_pow => ASTOperator::Pow,
+            Rule::op_xor => ASTOperator::Xor,
+            Rule::op_and => ASTOperator::And,
+            Rule::op_or => ASTOperator::Or,
+            Rule::op_shl => ASTOperator::Shl,
+            Rule::op_shr => ASTOperator::Shr,
+            Rule::op_rep => ASTOperator::Rep,
+            _ => panic!("Not an operator token!")
         }
     }
 }

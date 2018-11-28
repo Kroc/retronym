@@ -20,6 +20,13 @@ pub struct ParseError(Box<ParseErrorKind>);
 /// The specific type of an error:
 #[derive(Debug)]
 pub enum ParseErrorKind {
+    /// During the parsing process different possible outcomes are tested and
+    /// our parse methods will return the "Unrecognized" error when the current
+    /// token doesn't apply to them; for example, if we attempt to parse an
+    /// expression, but the current token is a macro. It's up to the caller
+    /// to decide if the error is actually unexpected or not.  
+    Unrecognized,
+
     /// "End Of File" error. This occurs when reading tokens and you reach
     /// the end. It's up to the caller to decide if this is "unexpected".
     EndOfFile,
@@ -66,6 +73,13 @@ impl ParseError {
     pub fn is_endoffile(&self) -> bool {
         match *self.0 {
             ParseErrorKind::EndOfFile => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_unrecognized(&self) -> bool {
+        match *self.0 {
+            ParseErrorKind::Unrecognized => true,
             _ => false,
         }
     }
