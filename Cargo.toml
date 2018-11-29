@@ -4,12 +4,33 @@
 [package]
 name = "retronym"
 version = "0.0.0"
-authors = ["Kroc Camen <kroc@camendesign.com>"]
 edition = "2018"
+authors = ["Kroc Camen <kroc@camendesign.com>"]
+repository = "https://github.com/Kroc/retronym"
+# project is unfinished -- do not accidently push to crates.io
+publish = false
+readme = "README.md"
+categories = ["parsing", "parser-implementations", "games", "game-engines", "hardware-support"]
 
 [dependencies]
 pest = "2.0.2"
 pest_derive = "2.0.1"
+
+[[bin]]
+name = "retronym"
+path = "src/main.rs"
+doc = false
+doctest = false
+test = false
+bench = false
+
+[lib]
+name = "retronym"
+path = "src/lib/lib.rs"
+doc = true
+doctest = false
+test = false
+bench = false
 
 [profile.release]
 panic = 'abort'

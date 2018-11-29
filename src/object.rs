@@ -6,8 +6,8 @@
 //! a binary file, given a set of imports (from other Objects) to 'fill in the
 //! blanks'.
 
-use crate::parser::ast::AST;
-use crate::parser::parser::RymParser;
+use retronym::ast::AST;
+use retronym::parser::RymParser;
 
 pub struct Object<'t> {
     _ast: AST<'t>,

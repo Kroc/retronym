@@ -1,7 +1,7 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use crate::parser::error::*;
+use crate::error::*;
 
 /// The "Abstract Syntax Tree" is a machine understandable respresentation of
 /// some source code. Because `ASTNode`s can contain a reference back to the
@@ -20,7 +20,7 @@ impl Default for AST<'_> {
 
 //==============================================================================
 
-use crate::parser::token::MaybeToken;
+use crate::token::MaybeToken;
 
 /// The AST is made up of a series of nodes where each node is a top-level
 /// "statement" and may contain descendants based on type. In practice,
@@ -34,6 +34,8 @@ pub struct ASTNode<'token> {
     /// for error messages.
     pub token: MaybeToken<'token>,
 }
+
+pub type MaybeASTNode<'token> = Option<ASTNode<'token>>;
 
 #[derive(Debug)]
 pub enum ASTKind<'token> {
@@ -113,7 +115,7 @@ pub enum ASTOperator {
 
 /// During building of the `AST`, the methods return either a new `ASTNode` to
 /// attach to the `AST`, or a `ParseError`.
-pub type ASTResult<'token> = ParseResult<Option<ASTNode<'token>>>;
+pub type ASTResult<'token> = ParseResult<MaybeASTNode<'token>>;
 
 impl From<ParseError> for ASTResult<'_> {
     /// For brevity, allow conversion of a ParseError to an ASTResult,
@@ -146,10 +148,8 @@ impl<'token> ASTNode<'token> {
         oper: Token<'token>,
         right: ASTNode<'token>,
     ) -> Self {
-        Self{
-            kind: ASTKind::Expr(Box::new(
-                ASTExpr::new(left, &oper, right)
-            )),
+        Self {
+            kind: ASTKind::Expr(Box::new(ASTExpr::new(left, &oper, right))),
             token: Some(oper),
         }
     }
@@ -157,8 +157,8 @@ impl<'token> ASTNode<'token> {
 
 //==============================================================================
 
-use crate::parser::parser::Rule;
-use crate::parser::token::Token;
+use crate::parser::Rule;
+use crate::token::Token;
 use std::convert::From;
 
 impl<'token> From<Token<'token>> for ASTNode<'token> {
@@ -241,9 +241,9 @@ impl Display for ASTNode<'_> {
 impl Display for ASTValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-                ASTValue::Int(i) => write!(f, "{}", i),
-                ASTValue::Float(d) => write!(f, "{}", d),
-                ASTValue::Str(s) => write!(f, "{}", s),
+            ASTValue::Int(i) => write!(f, "{}", i),
+            ASTValue::Float(d) => write!(f, "{}", d),
+            ASTValue::Str(s) => write!(f, "{}", s),
         }
     }
 }
@@ -257,22 +257,25 @@ impl<'token> Display for ASTExpr<'token> {
 
 impl Display for ASTOperator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", match self {
-            ASTOperator::Add => "+",
-            ASTOperator::Sub => "-",
-            ASTOperator::Mul => "*",
-            ASTOperator::Div => "/",
-            ASTOperator::Mod => r"\\",
-            ASTOperator::Pow => "**",
-            ASTOperator::Xor => "^",
-            ASTOperator::And => "&",
-            ASTOperator::Or => "|",
-            ASTOperator::Shl => "<<",
-            ASTOperator::Shr => ">>",
-            ASTOperator::Rep => "x",
-        })
+        write!(
+            f,
+            "{}",
+            match self {
+                ASTOperator::Add => "+",
+                ASTOperator::Sub => "-",
+                ASTOperator::Mul => "*",
+                ASTOperator::Div => "/",
+                ASTOperator::Mod => r"\\",
+                ASTOperator::Pow => "**",
+                ASTOperator::Xor => "^",
+                ASTOperator::And => "&",
+                ASTOperator::Or => "|",
+                ASTOperator::Shl => "<<",
+                ASTOperator::Shr => ">>",
+                ASTOperator::Rep => "x",
+            }
+        )
     }
 }
 
 //==============================================================================
-

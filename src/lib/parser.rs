@@ -8,19 +8,19 @@ const _GRAMMAR: &str = include_str!("retronym.pest");
 
 // build a parser using Pest:
 
-use crate::parser::tokenstream::TokenStream;
+use crate::tokenstream::TokenStream;
 
 // this will do all the macro work of turning our grammar file into a `parse`
 // method on the below structure.
 #[derive(Parser)]
-#[grammar = "parser/retronym.pest"]
+#[grammar = "lib/retronym.pest"]
 pub struct RymParser<'token> {
     #[allow(dead_code)]
     tokens: TokenStream<'token>,
 }
 
-use crate::parser::ast::{ASTNode, ASTResult};
-use crate::parser::error::*;
+use crate::ast::{ASTNode, ASTResult};
+use crate::error::*;
 
 impl<'token> RymParser<'token> {
     // note that we cannot implement `FromStr` due to the lifetime requirement?
@@ -145,7 +145,7 @@ impl<'token> Iterator for RymParser<'token> {
             Ok(option) => match option {
                 Some(ast_node) => Some(ASTResult::from(ast_node)),
                 None => None,
-            }
-        } 
+            },
+        }
     }
 }

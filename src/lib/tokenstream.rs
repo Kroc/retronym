@@ -5,9 +5,9 @@
 //! into a continuous stream of "tokens", the individual 'words' of the source
 //! code.
 
-use crate::parser::parser::Rule;
-use crate::parser::parser::RymParser;
-use crate::parser::token::{Token, Tokens};
+use crate::parser::Rule;
+use crate::parser::RymParser;
+use crate::token::{Token, Tokens};
 
 /// A `TokenStream` wraps Pest's `Pairs` struct and presents an interface that
 /// is more directly informed of Retronym's grammar.
@@ -20,7 +20,7 @@ pub struct TokenStream<'token> {
 // required for the `parse` method of `RymParser` to be visible here.
 use pest::Parser;
 
-use crate::parser::token::MaybeToken;
+use crate::token::MaybeToken;
 
 impl<'token> TokenStream<'token> {
     /// Creates a `TokenStream` directly from source code.

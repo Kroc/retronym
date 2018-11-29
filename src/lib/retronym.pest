@@ -8,6 +8,8 @@
 
 WHITESPACE      = _{ " " | "\t" }
 
+eol             = _{ WHITESPACE? ~ NEWLINE }
+
 comment         = _{ ";" ~ ( !NEWLINE ~ ANY )* ~ NEWLINE }
 
 // outline:
@@ -15,7 +17,7 @@ comment         = _{ ";" ~ ( !NEWLINE ~ ANY )* ~ NEWLINE }
 
 rym             = _{ SOI ~ ( NEWLINE | comment | root )* ~ EOI }
 
-root            = _{ WHITESPACE* ~ list }
+root            = _{ WHITESPACE? ~ list }
 
 // almost everything in Retronym is an implicit list, commas are optional.
 // for example, strings are self-contained lists of bytes. because macros
@@ -23,7 +25,7 @@ root            = _{ WHITESPACE* ~ list }
 // list validity strongly here; we'll only concern ourselves with the terminals
 // and let the parser do the actual validation.
 
-list            = _{ expr ~ ","? ~ list? }
+list            = _{ expr ~ ( ( "," | WHITESPACE+ ) ~ list )? }
 
 expr            = _{ value ~ ( operator ~ expr )? }
 
@@ -33,7 +35,6 @@ value           = _{
                 |   atom
                 |   mac
                 |   number
-                |   deref
                 }
 
 //==============================================================================
@@ -42,11 +43,11 @@ keyword         = { "atom" | "macro" }
 
 atom            = { ASCII_ALPHA_UPPER ~ ( ASCII_DIGIT | ASCII_ALPHA_UPPER )* }
 
-mac             = {
+mac             = @{
                     // cannot begin with a digit
                     ( ASCII_ALPHA_LOWER | "_" )
                     // underscores allowed, unlike Atoms
-                    ~ ( ASCII_DIGIT | ASCII_ALPHA_UPPER | "_" )*
+                    ~ ( ASCII_DIGIT | ASCII_ALPHA_LOWER | "_" )*
                     // a trailing hash is allowed for the benefit of 6502
                     // instructions, e.g. `lda# $FF`
                     ~ "#"?
@@ -114,10 +115,3 @@ op_shl          = { "<<" }  // shift-left
 op_shr          = { ">>" }  // shift-right
 
 op_rep          = { "x" }   // repeat (for building a list)
-
-// dereference (operator?)
-//------------------------------------------------------------------------------
-
-deref           = _{ deref_begin ~ expr ~ deref_end }
-deref_begin     = { "[" }
-deref_end       = { "]" }
