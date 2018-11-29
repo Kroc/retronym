@@ -1,7 +1,7 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use crate::object::Object;
+use retronym::object::Object;
 use std::io;
 use std::io::Write;
 

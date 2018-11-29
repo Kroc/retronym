@@ -11,6 +11,7 @@ repository = "https://github.com/Kroc/retronym"
 publish = false
 readme = "README.md"
 categories = ["parsing", "parser-implementations", "games", "game-engines", "hardware-support"]
+license = "BSD-2-Clause"
 
 [dependencies]
 pest = "2.0.2"

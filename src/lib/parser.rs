@@ -19,7 +19,7 @@ pub struct RymParser<'token> {
     tokens: TokenStream<'token>,
 }
 
-use crate::ast::{ASTNode, ASTResult};
+use crate::astnode::{ASTNode, ASTResult};
 use crate::error::*;
 
 impl<'token> RymParser<'token> {
