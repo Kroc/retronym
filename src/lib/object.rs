@@ -11,12 +11,12 @@ pub struct Object {
     /// to generate a final binary. Some will be raw binary data and others
     /// will be some kind of yet-unknown data such as calculations and external
     /// symbols.
-    blocks: Vec<Block>,
+    _blocks: Vec<Block>,
 }
 
 impl Default for Object {
     fn default() -> Self {
-        Self { blocks: Vec::new() }
+        Self { _blocks: Vec::new() }
     }
 }
 
@@ -34,7 +34,7 @@ pub enum Block {
 /// before being output. Once we've decided where its going, it can be
 /// copied as-is.
 pub struct Data {
-    bytes: Vec<u8>,
+    _bytes: Vec<u8>,
 }
 
 //==============================================================================

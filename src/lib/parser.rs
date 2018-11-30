@@ -68,69 +68,64 @@ impl<'token> RymParser<'token> {
     ///
     /// If the current token is not the beginning of an expression returns
     /// `None`; the caller can decide if this is unexpected or not; otherwise
-    /// returns an `ASTResult` of either an `ASTNode` built from the expression,
+    /// returns an `ASTResult` of either an `ASTNode` of the expression,
     /// or the error encountered.
     fn parse_expr(&mut self) -> ASTResult<'token> {
-        // well, if there are no tokens, this can't be an expression
-        if self.tokens.is_eof() {
-            return Ok(None);
-        }
-
-        // if the current token is not valid for the beginning of an
-        // expression (values only), then return 'unrecognised'
         if !self.tokens.is_expr() {
             return Ok(None);
         }
 
-        // put aside the current token; we need to check for a following
-        // operator that defines an expression. this token is guaranteed
-        // to exist (for `unwrap`) because of the `is_eof` check earlier
-        let left = self.tokens.consume().unwrap();
+        // this is the beginning of an expression and we need to read the
+        // first value that will form the inner-most (but also left-most)
+        // value, e.g. the "1" in `(((1 + 2) + 3) + 4)`
+        let left = ASTNode::from(self.tokens.consume().unwrap());
 
-        // is there any token following, is it an operator?
-        if self.tokens.is_eof() | !self.tokens.is_oper() {
-            // no: this is a single value rather than an expression, we can
-            // skip the Expr AST node. this brings an end to any recursion;
-            // the top most call will receive a single AST node containing
-            // descending child nodes
-            return ASTResult::from(ASTNode::from(left));
+        // is there any token following,
+        // is it an operator?
+        if !self.tokens.is_oper() {
+            // no: this is a single value rather than an expression,
+            // we can skip building an expression node and return
+            // a value node instead
+            return ASTResult::from(left);
         }
 
+        self.parse_expr_inner(left)
+    }
+
+    fn parse_expr_inner(&mut self, left: ASTNode<'token>) -> ASTResult<'token> {
         // save the operator, move to the next token
         let oper = self.tokens.consume().unwrap();
 
-        // the value that follows can itself be part of an expression;
-        // e.g. `1 + 2 + 3` is equivilent to `1 + (2 + 3)`. if a terminal
-        // follows (i.e. a value) then the return from recursing here will
-        // be an AST node containing a single value and not another expression
-        //
-        // the recursion here returns an `ASTResult` -- a `Result` containing
-        // an `Option`; therefore `Err`, `None`, or an `ASTNode`.
-        //
-        // if retrieving the right-hand-side errored,
-        // pass that error up (`and_then` returns `Err` early)
-        self.parse_expr().and_then(|option| match option {
-            // for a non-error result, check for `None` or `ASTNode`,
-            // where `None` means that there was no match -- in this case,
-            // we have an operator without a following value! promote this
-            // to a hard error:
-            None => ASTResult::from(ParseError::end_of_file()),
-            // the AST node returned is the right-hand-side of the expression,
-            // we still need to combine it with the left-hand-side value and
-            // the operator!
-            Some(ast_node) => {
-                // construct an expression node containing
-                // the left & right nodes + the operator:
-                ASTResult::from(ASTNode::new_expr(
-                    // left hand side:
-                    ASTNode::from(left),
-                    // op token:
-                    oper,
-                    // right hand side:
-                    ast_node,
-                ))
-            }
-        })
+        // is there a token at all, and is it also a valid expression value?
+        if !self.tokens.is_expr() {
+            // no: we have an operator, but no value following it
+            // e.g. "(1 + )"; return an "unexpected token" error
+            return ASTResult::from(ParseError::unexpected());
+        }
+
+        // get the right hand value
+        let right = self.tokens.consume().unwrap();
+
+        //build our expression node:
+        let expr = ASTNode::new_expr(
+            // left hand side:
+            left,
+            // op token:
+            oper,
+            // right hand side:
+            ASTNode::from(right),
+        );
+
+        // we have managed to parse, for example, the "(1 + 2)" in
+        // "((1 + 2) + 3)" but now we need to check if the expression
+        // continues further
+        if self.tokens.is_oper() {
+            // the expression we have just assembled will now
+            // form the left-hand-side for the outer expression
+            self.parse_expr_inner(expr)
+        } else {
+            ASTResult::from(expr)
+        }
     }
 }
 

@@ -24,6 +24,8 @@ pub enum ParseErrorKind {
     /// the end. It's up to the caller to decide if this is "unexpected".
     EndOfFile,
 
+    Unexpected,
+
     #[doc(hidden)]
     Unimplemented,
 
@@ -54,6 +56,12 @@ impl ParseError {
     #[allow(dead_code)]
     pub(crate) fn end_of_file() -> Self {
         ParseError(Box::new(ParseErrorKind::EndOfFile))
+    }
+
+    /// Create an `Unexpected` error.
+    #[allow(dead_code)]
+    pub(crate) fn unexpected() -> Self {
+        ParseError(Box::new(ParseErrorKind::Unexpected))
     }
 
     /// Return the specific type of this error.
@@ -93,6 +101,7 @@ impl StdError for ParseError {
         match *self.0 {
             ParseErrorKind::Unimplemented => "Unimplemented",
             ParseErrorKind::EndOfFile => "End Of File",
+            ParseErrorKind::Unexpected => "Unexpected",
             ParseErrorKind::Io(ref err) => err.description(),
             ParseErrorKind::ParseInt(ref err) => err.description(),
             _ => unreachable!(),
@@ -103,6 +112,7 @@ impl StdError for ParseError {
         match *self.0 {
             ParseErrorKind::Unimplemented => None,
             ParseErrorKind::EndOfFile => None,
+            ParseErrorKind::Unexpected => None,
             ParseErrorKind::Io(ref err) => Some(err),
             ParseErrorKind::ParseInt(ref err) => Some(err),
             _ => unreachable!(),
@@ -115,6 +125,7 @@ impl fmt::Display for ParseError {
         match *self.0 {
             ParseErrorKind::Unimplemented => write!(f, "Unimplemented"),
             ParseErrorKind::EndOfFile => write!(f, "End Of File"),
+            ParseErrorKind::Unexpected => write!(f, "Unexpected"),
             ParseErrorKind::Io(ref err) => err.fmt(f),
             ParseErrorKind::ParseInt(ref err) => err.fmt(f),
             _ => unreachable!(),

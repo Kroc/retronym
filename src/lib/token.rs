@@ -105,8 +105,7 @@ impl<'t> Token<'t> {
             Rule::atom
             | Rule::int_number
             | Rule::hex_number
-            | Rule::bin_number
-            | Rule::string => true,
+            | Rule::bin_number => true,
             _ => false,
         }
     }

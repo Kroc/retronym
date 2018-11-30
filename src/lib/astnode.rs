@@ -113,6 +113,12 @@ impl<'token> From<ASTNode<'token>> for ASTResult<'token> {
     }
 }
 
+impl<'token> From<Token<'token>> for ASTResult<'token> {
+    fn from(token: Token<'token>) -> Self {
+        Self::from(ASTNode::from(token))
+    }
+}
+
 //------------------------------------------------------------------------------
 
 impl Default for ASTNode<'_> {

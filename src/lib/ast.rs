@@ -56,6 +56,7 @@ impl<'token> AST<'token> {
             }
         }
         
+        // and what did we learn children?
         for n in &ast {
             println!(": {}", n);
         }
