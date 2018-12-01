@@ -85,12 +85,7 @@ operator        = _{
                     op_pow |
 
                     op_add | op_sub | op_mul | op_div | op_mod |
-                    op_xor | op_and | op_or | op_shl | op_shr |
-
-                    // the repeat operator is not a typical operator
-                    // as it builds lists, but we'll handle that
-                    // distinction at the AST level
-                    op_rep
+                    op_xor | op_and | op_or | op_shl | op_shr
                 }
 
 //TODO: repeat: "x" (is this even an operator?)
@@ -113,5 +108,3 @@ op_and          = { "&" }   // and
 op_or           = { "|" }   // or
 op_shl          = { "<<" }  // shift-left
 op_shr          = { ">>" }  // shift-right
-
-op_rep          = { "x" }   // repeat (for building a list)

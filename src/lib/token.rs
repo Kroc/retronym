@@ -123,8 +123,7 @@ impl<'t> Token<'t> {
             | Rule::op_and
             | Rule::op_or
             | Rule::op_shl
-            | Rule::op_shr
-            | Rule::op_rep => true,
+            | Rule::op_shr => true,
             _ => false,
         }
     }

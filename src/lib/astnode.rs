@@ -91,8 +91,6 @@ pub enum ASTOperator {
     Shl,
     /// Bitwise SHift-Right operator ">>"
     Shr,
-    /// Repeat operator "x"
-    Rep,
 }
 
 /// During building of the `AST`, the methods return either a new `ASTNode` to
@@ -202,7 +200,6 @@ impl From<&Token<'_>> for ASTOperator {
             Rule::op_or => ASTOperator::Or,
             Rule::op_shl => ASTOperator::Shl,
             Rule::op_shr => ASTOperator::Shr,
-            Rule::op_rep => ASTOperator::Rep,
             _ => panic!("Not an operator token!"),
         }
     }
@@ -260,7 +257,6 @@ impl Display for ASTOperator {
                 ASTOperator::Or => "|",
                 ASTOperator::Shl => "<<",
                 ASTOperator::Shr => ">>",
-                ASTOperator::Rep => "x",
             }
         )
     }
