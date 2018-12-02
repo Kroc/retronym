@@ -15,6 +15,9 @@ pub struct ASTNode<'token> {
     /// An optional reference back to the original source code,
     /// for error messages.
     pub token: MaybeToken<'token>,
+    /// A node is static if it, and any descendents, contain only literal
+    /// values that can be calculated without outside information.
+    pub is_static: bool,
 }
 
 pub type MaybeASTNode<'token> = Option<ASTNode<'token>>;
@@ -124,6 +127,7 @@ impl Default for ASTNode<'_> {
         Self {
             kind: ASTKind::Void,
             token: None,
+            is_static: true,
         }
     }
 }
@@ -135,6 +139,9 @@ impl<'token> ASTNode<'token> {
         right: ASTNode<'token>,
     ) -> Self {
         Self {
+            // the expression can only be static if *both* sides
+            // of the expression are also static
+            is_static: left.is_static && right.is_static,
             kind: ASTKind::Expr(Box::new(ASTExpr::new(left, &oper, right))),
             token: Some(oper),
         }
@@ -166,6 +173,7 @@ impl<'token> From<Token<'token>> for ASTNode<'token> {
                 Rule::bin_number => ASTKind::Value(ASTValue::Int(
                     i64::from_str_radix(&token.as_str()[1..], 2).unwrap(),
                 )),
+                // an atom is returned as a string
                 Rule::atom => ASTKind::Atom(
                     //TODO: messy
                     token.as_str().to_string(),
@@ -175,10 +183,20 @@ impl<'token> From<Token<'token>> for ASTNode<'token> {
                     //TODO: messy
                     token.as_str().to_string(),
                 ),
-                _ => ASTKind::Void,
+                _ => panic!(
+                    "Not a `Token` that can be converted into an `ASTNode`."
+                ),
+            },
+            // is this a static (literal) value?
+            is_static: match token.as_rule() {
+                // numbers and strings need no dynamic calculation
+                Rule::int_number | Rule::hex_number | Rule::bin_number => true,
+                Rule::string => true,
+                // atoms & macros require name-resolution
+                _ => false,
             },
             // embed the original token with the source-code location.
-            // this'll be used if we need to print an error message.
+            // this'll be used if we need to print an error message
             token: Some(token),
         }
     }
@@ -263,3 +281,4 @@ impl Display for ASTOperator {
 }
 
 //==============================================================================
+

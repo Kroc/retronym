@@ -55,16 +55,39 @@ impl<'token> AST<'token> {
                 },
             }
         }
-        
-        // and what did we learn children?
-        for n in &ast {
-            println!(": {}", n);
-        }
 
         ast
     }
 
-    pub fn push(&mut self, node: ASTNode<'token>) {
+    fn push(&mut self, node: ASTNode<'token>) {
         self.nodes.push(node);
+    }
+}
+
+impl<'token> AST<'token> {
+    pub fn process(&self) {
+        // create an iterator over the AST nodes;
+        // we'll use this to process each statement in the AST
+        let nodes = self.into_iter();
+
+        for n in nodes {
+            // we need to determine if each statement is static or dynamic:
+            //
+            // - static statements require no outside information
+            //   and can be flattened into a single value to output
+            //
+            // - dynamic statements cannot be calculated without outside
+            //   information such as a macro, function call, imported symbol
+            //   etc. since we cannot produce a value with these yet,
+            //   store them with a reference to their AST node for later
+            //   calculation
+            //
+            if n.is_static {
+                // for nodes containing only static information, execute the
+                // expression, folding the node (and children) down to a final
+                // value
+            }
+            println!(": {}", n);
+        }
     }
 }

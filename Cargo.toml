@@ -35,3 +35,5 @@ bench = false
 
 [profile.release]
 panic = 'abort'
+lto = true
+opt-level = 3

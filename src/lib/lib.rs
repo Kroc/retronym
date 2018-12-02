@@ -12,5 +12,6 @@ pub mod astnode;
 pub mod error;
 pub mod object;
 pub mod parser;
+pub mod segment;
 pub mod token;
 pub mod tokenstream;

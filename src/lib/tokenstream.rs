@@ -26,7 +26,7 @@ impl<'token> TokenStream<'token> {
     /// Creates a `TokenStream` directly from source code.
     pub fn new_from_str(source: &'token str) -> Self {
         // instantiate a TokenStream object,
-        let tokenstream = Self {
+        Self {
             // assigning the `tokens` field immediately like this gives
             // better type inference, lest we summon the turbo-fish!
             tokens: RymParser::parse(Rule::rym, &source)
@@ -39,13 +39,7 @@ impl<'token> TokenStream<'token> {
 
             // begin at the beginning
             index: 0,
-        };
-
-        for p in tokenstream.tokens.clone() {
-            println!("token: {:?}", p);
         }
-
-        tokenstream
     }
 
     /// Moves to the next token.

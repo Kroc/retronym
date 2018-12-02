@@ -44,7 +44,14 @@ use crate::ast::AST;
 impl Object {
     pub fn new_from_str(source: &str) -> Self {
         // create an AST from the source code
-        let _ast = AST::new_from_str(source);
+        let ast = AST::new_from_str(source);
+
+        // TODO: 'execute' the AST producing an object file?
+        // - we need to locate the placeholders (imports) and their size
+        //   (size will be set by the record type)
+        // - exports are created as we populate the object
+        
+        ast.process();
 
         Self::default()
     }
