@@ -32,6 +32,9 @@ pub enum ASTKind<'token> {
     Atom(String),
     /// A macro invocation.
     Macro(String),
+    /// A string literal. Since strings are self-contained lists, these are
+    /// not treated as expression values.
+    Str(String),
     /// A literal value.
     Value(ASTValue),
 }
@@ -42,8 +45,6 @@ pub enum ASTValue {
     Int(i64),
     /// A floating point literal value.
     Float(f64),
-    /// A string literal.
-    Str(String),
 }
 
 #[derive(Debug)]
@@ -236,6 +237,7 @@ impl Display for ASTNode<'_> {
             ASTKind::Expr(ref x) => write!(f, "{}", x),
             ASTKind::Atom(ref a) => write!(f, "{}", a),
             ASTKind::Macro(ref m) => write!(f, "{}", m),
+            ASTKind::Str(ref s) => write!(f, "{}", s),
             ASTKind::Value(ref v) => write!(f, "{}", v),
         }
     }
@@ -246,7 +248,6 @@ impl Display for ASTValue {
         match self {
             ASTValue::Int(i) => write!(f, "{}", i),
             ASTValue::Float(d) => write!(f, "{}", d),
-            ASTValue::Str(s) => write!(f, "{}", s),
         }
     }
 }
@@ -282,3 +283,40 @@ impl Display for ASTOperator {
 
 //==============================================================================
 
+pub enum ASTFoldResult {
+    // Result of the fold is an integer.
+    Int(i64),
+    // Result of the fold is a float.
+    Float(f64),
+    //TODO: result of a dyanmic expression should be a relaxtion joint
+    //      or some such deferred calculation
+}
+
+impl ASTNode<'_> {
+    fn _fold(&self) -> ASTFoldResult {
+        match &self.kind {
+            ASTKind::Value( v ) => match v {
+                ASTValue::Int( i ) => ASTFoldResult::Int(*i),
+                ASTValue::Float( d ) => ASTFoldResult::Float(*d),
+            }
+            _ => unimplemented!()
+        }
+    }
+}
+
+impl ASTExpr<'_> {
+    fn _fold(&self) -> ASTFoldResult {
+        // we need to check if the expression is static or dynamic:
+        //
+        // - static expressions require no outside information
+        //   and can be flattened into a single value to output
+        //
+        // - dynamic expressions cannot be calculated without outside
+        //   information such as a function call, imported symbol etc.
+        //   since we cannot produce a value with these yet, store them
+        //   with a reference to their AST node for later calculation
+        //
+
+        unimplemented!()
+    }
+}
