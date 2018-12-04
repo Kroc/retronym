@@ -121,7 +121,7 @@ impl<'t> Token<'t> {
             | Rule::op_mod
             | Rule::op_xor
             | Rule::op_and
-            | Rule::op_or
+            | Rule::op_bor
             | Rule::op_shl
             | Rule::op_shr => true,
             _ => false,

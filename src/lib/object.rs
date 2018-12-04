@@ -51,7 +51,7 @@ impl Object {
         //   (size will be set by the record type)
         // - exports are created as we populate the object
         
-        ast.process();
+        ast.eval();
 
         Self::default()
     }

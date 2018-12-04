@@ -1,6 +1,10 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
+//! The AST `Node` is the core representation of source code in the program,
+//! it uses a different enum type to differentiate numbers, strings, macros
+//! and so on. AST nodes can contain other nodes, such as with expressions.
+
 use crate::error::*;
 use crate::token::MaybeToken;
 
@@ -8,7 +12,7 @@ use crate::token::MaybeToken;
 /// "statement" and may contain descendants based on type. In practice,
 /// Retronym's top-level statements are either macros or expressions.
 #[derive(Debug)]
-pub struct ASTNode<'token> {
+pub struct Node<'token> {
     /// The 'type' of the node, e.g. whether this is a literal number,
     /// an expression, a macro invocation etc. This can contain nested nodes!
     pub kind: ASTKind<'token>,
@@ -20,14 +24,16 @@ pub struct ASTNode<'token> {
     pub is_static: bool,
 }
 
-pub type MaybeASTNode<'token> = Option<ASTNode<'token>>;
+pub type MaybeNode<'token> = Option<Node<'token>>;
+
+use crate::expr::Expr;
 
 #[derive(Debug)]
 pub enum ASTKind<'token> {
     /// An empty node, used for unimplemented node types.
     Void,
     /// An experssion -- i.e. a calculation
-    Expr(Box<ASTExpr<'token>>),
+    Expr(Box<Expr<'token>>),
     /// An atom.
     Atom(String),
     /// A macro invocation.
@@ -48,31 +54,7 @@ pub enum ASTValue {
 }
 
 #[derive(Debug)]
-pub struct ASTExpr<'token> {
-    pub left: ASTNode<'token>,
-    pub oper: ASTOperator,
-    pub right: ASTNode<'token>,
-}
-
-impl<'token> ASTExpr<'token> {
-    fn new(
-        left: ASTNode<'token>,
-        oper: &Token<'token>,
-        right: ASTNode<'token>,
-    ) -> Self {
-        ASTExpr {
-            // left hand side:
-            left: left,
-            // convert op token to op enum:
-            oper: ASTOperator::from(oper),
-            // right hand side:
-            right: right,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum ASTOperator {
+pub enum Operator {
     /// Addition operator "+"
     Add,
     /// Subtraction operator "-"
@@ -90,16 +72,16 @@ pub enum ASTOperator {
     /// Bitwise AND operator "&"
     And,
     /// Bitwise OR operator "|"
-    Or,
+    Bor,
     /// Bitwise SHift-Left operator "<<"
     Shl,
     /// Bitwise SHift-Right operator ">>"
     Shr,
 }
 
-/// During building of the `AST`, the methods return either a new `ASTNode` to
+/// During building of the `AST`, the methods return either a new `Node` to
 /// attach to the `AST`, or a `ParseError`.
-pub type ASTResult<'token> = ParseResult<MaybeASTNode<'token>>;
+pub type ASTResult<'token> = ParseResult<MaybeNode<'token>>;
 
 impl From<ParseError> for ASTResult<'_> {
     /// For brevity, allow conversion of a ParseError to an ASTResult,
@@ -109,21 +91,21 @@ impl From<ParseError> for ASTResult<'_> {
     }
 }
 
-impl<'token> From<ASTNode<'token>> for ASTResult<'token> {
-    fn from(ast_node: ASTNode<'token>) -> Self {
+impl<'token> From<Node<'token>> for ASTResult<'token> {
+    fn from(ast_node: Node<'token>) -> Self {
         Ok(Some(ast_node))
     }
 }
 
 impl<'token> From<Token<'token>> for ASTResult<'token> {
     fn from(token: Token<'token>) -> Self {
-        Self::from(ASTNode::from(token))
+        Self::from(Node::from(token))
     }
 }
 
 //------------------------------------------------------------------------------
 
-impl Default for ASTNode<'_> {
+impl Default for Node<'_> {
     fn default() -> Self {
         Self {
             kind: ASTKind::Void,
@@ -133,17 +115,17 @@ impl Default for ASTNode<'_> {
     }
 }
 
-impl<'token> ASTNode<'token> {
+impl<'token> Node<'token> {
     pub fn new_expr(
-        left: ASTNode<'token>,
+        left: Node<'token>,
         oper: Token<'token>,
-        right: ASTNode<'token>,
+        right: Node<'token>,
     ) -> Self {
         Self {
             // the expression can only be static if *both* sides
             // of the expression are also static
             is_static: left.is_static && right.is_static,
-            kind: ASTKind::Expr(Box::new(ASTExpr::new(left, &oper, right))),
+            kind: ASTKind::Expr(Box::new(Expr::new(left, &oper, right))),
             token: Some(oper),
         }
     }
@@ -155,9 +137,9 @@ use crate::parser::Rule;
 use crate::token::Token;
 use std::convert::From;
 
-impl<'token> From<Token<'token>> for ASTNode<'token> {
-    fn from(token: Token<'token>) -> ASTNode<'_> {
-        ASTNode {
+impl<'token> From<Token<'token>> for Node<'token> {
+    fn from(token: Token<'token>) -> Node<'_> {
+        Node {
             kind: match token.as_rule() {
                 // parse an integer number:
                 Rule::int_number => ASTKind::Value(ASTValue::Int(
@@ -185,7 +167,7 @@ impl<'token> From<Token<'token>> for ASTNode<'token> {
                     token.as_str().to_string(),
                 ),
                 _ => panic!(
-                    "Not a `Token` that can be converted into an `ASTNode`."
+                    "Not a `Token` that can be converted into an `Node`."
                 ),
             },
             // is this a static (literal) value?
@@ -203,22 +185,22 @@ impl<'token> From<Token<'token>> for ASTNode<'token> {
     }
 }
 
-impl From<&Token<'_>> for ASTOperator {
-    /// Convert a token into an `ASTOperator` enum.
+impl From<&Token<'_>> for Operator {
+    /// Convert a token into an `Operator` enum.
     /// Panics if using a token that is not an operator!
     fn from(token: &Token<'_>) -> Self {
         match token.as_rule() {
-            Rule::op_add => ASTOperator::Add,
-            Rule::op_sub => ASTOperator::Sub,
-            Rule::op_mul => ASTOperator::Mul,
-            Rule::op_div => ASTOperator::Div,
-            Rule::op_mod => ASTOperator::Mod,
-            Rule::op_pow => ASTOperator::Pow,
-            Rule::op_xor => ASTOperator::Xor,
-            Rule::op_and => ASTOperator::And,
-            Rule::op_or => ASTOperator::Or,
-            Rule::op_shl => ASTOperator::Shl,
-            Rule::op_shr => ASTOperator::Shr,
+            Rule::op_add => Operator::Add,
+            Rule::op_sub => Operator::Sub,
+            Rule::op_mul => Operator::Mul,
+            Rule::op_div => Operator::Div,
+            Rule::op_mod => Operator::Mod,
+            Rule::op_pow => Operator::Pow,
+            Rule::op_xor => Operator::Xor,
+            Rule::op_and => Operator::And,
+            Rule::op_bor => Operator::Bor,
+            Rule::op_shl => Operator::Shl,
+            Rule::op_shr => Operator::Shr,
             _ => panic!("Not an operator token!"),
         }
     }
@@ -228,8 +210,8 @@ impl From<&Token<'_>> for ASTOperator {
 
 use std::fmt::{self, *};
 
-impl Display for ASTNode<'_> {
-    /// Pretty-prints an ASTNode (and its descendants),
+impl Display for Node<'_> {
+    /// Pretty-prints a `Node` (and its descendants),
     /// essentially outputting normalised source code
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.kind {
@@ -252,71 +234,24 @@ impl Display for ASTValue {
     }
 }
 
-impl<'token> Display for ASTExpr<'token> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // TODO: ASTOperator to string
-        write!(f, "({} {} {})", self.left, self.oper, self.right)
-    }
-}
-
-impl Display for ASTOperator {
+impl Display for Operator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
             "{}",
             match self {
-                ASTOperator::Add => "+",
-                ASTOperator::Sub => "-",
-                ASTOperator::Mul => "*",
-                ASTOperator::Div => "/",
-                ASTOperator::Mod => r"\\",
-                ASTOperator::Pow => "**",
-                ASTOperator::Xor => "^",
-                ASTOperator::And => "&",
-                ASTOperator::Or => "|",
-                ASTOperator::Shl => "<<",
-                ASTOperator::Shr => ">>",
+                Operator::Add => "+",
+                Operator::Sub => "-",
+                Operator::Mul => "*",
+                Operator::Div => "/",
+                Operator::Mod => r"\\",
+                Operator::Pow => "**",
+                Operator::Xor => "^",
+                Operator::And => "&",
+                Operator::Bor => "|",
+                Operator::Shl => "<<",
+                Operator::Shr => ">>",
             }
         )
-    }
-}
-
-//==============================================================================
-
-pub enum ASTFoldResult {
-    // Result of the fold is an integer.
-    Int(i64),
-    // Result of the fold is a float.
-    Float(f64),
-    //TODO: result of a dyanmic expression should be a relaxtion joint
-    //      or some such deferred calculation
-}
-
-impl ASTNode<'_> {
-    fn _fold(&self) -> ASTFoldResult {
-        match &self.kind {
-            ASTKind::Value( v ) => match v {
-                ASTValue::Int( i ) => ASTFoldResult::Int(*i),
-                ASTValue::Float( d ) => ASTFoldResult::Float(*d),
-            }
-            _ => unimplemented!()
-        }
-    }
-}
-
-impl ASTExpr<'_> {
-    fn _fold(&self) -> ASTFoldResult {
-        // we need to check if the expression is static or dynamic:
-        //
-        // - static expressions require no outside information
-        //   and can be flattened into a single value to output
-        //
-        // - dynamic expressions cannot be calculated without outside
-        //   information such as a function call, imported symbol etc.
-        //   since we cannot produce a value with these yet, store them
-        //   with a reference to their AST node for later calculation
-        //
-
-        unimplemented!()
     }
 }

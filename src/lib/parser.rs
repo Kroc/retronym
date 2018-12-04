@@ -19,7 +19,7 @@ pub struct RymParser<'token> {
     tokens: TokenStream<'token>,
 }
 
-use crate::astnode::{ASTNode, ASTResult};
+use crate::node::{Node, ASTResult};
 use crate::error::*;
 
 impl<'token> RymParser<'token> {
@@ -58,18 +58,18 @@ impl<'token> RymParser<'token> {
             return Ok(None);
         }
 
-        // build an ASTNode for a macro invocation.
+        // build a `Node` for a macro invocation.
         // TODO: messy
         let token = self.tokens.consume().unwrap();
-        ASTResult::from(ASTNode::from(token))
+        ASTResult::from(Node::from(token))
     }
 
     /// Parse an expression, returning an AST node representing that expression.
     ///
     /// If the current token is not the beginning of an expression returns
     /// `None`; the caller can decide if this is unexpected or not; otherwise
-    /// returns an `ASTResult` of either an `ASTNode` of the expression,
-    /// or the error encountered.
+    /// returns an `ASTResult` of either a `Node` of the expression, or the
+    /// error encountered.
     fn parse_expr(&mut self) -> ASTResult<'token> {
         if !self.tokens.is_expr() {
             return Ok(None);
@@ -78,7 +78,7 @@ impl<'token> RymParser<'token> {
         // this is the beginning of an expression and we need to read the
         // first value that will form the inner-most (but also left-most)
         // value, e.g. the "1" in `(((1 + 2) + 3) + 4)`
-        let left = ASTNode::from(self.tokens.consume().unwrap());
+        let left = Node::from(self.tokens.consume().unwrap());
 
         // is there any token following,
         // is it an operator?
@@ -92,7 +92,7 @@ impl<'token> RymParser<'token> {
         self.parse_expr_inner(left)
     }
 
-    fn parse_expr_inner(&mut self, left: ASTNode<'token>) -> ASTResult<'token> {
+    fn parse_expr_inner(&mut self, left: Node<'token>) -> ASTResult<'token> {
         // save the operator, move to the next token
         let oper = self.tokens.consume().unwrap();
 
@@ -107,13 +107,13 @@ impl<'token> RymParser<'token> {
         let right = self.tokens.consume().unwrap();
 
         //build our expression node:
-        let expr = ASTNode::new_expr(
+        let expr = Node::new_expr(
             // left hand side:
             left,
             // op token:
             oper,
             // right hand side:
-            ASTNode::from(right),
+            Node::from(right),
         );
 
         // we have managed to parse, for example, the "(1 + 2)" in

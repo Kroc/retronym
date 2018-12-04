@@ -1,14 +1,14 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use crate::astnode::ASTNode;
+use crate::node::Node;
 
 /// The "Abstract Syntax Tree" is a machine understandable respresentation of
-/// some source code. Because `ASTNode`s can contain a reference back to the
+/// some source code. Because AST nodes can contain a reference back to the
 /// original source code (token) for errors, the `'token` lifetime is used
 /// so that the source code is not deallocated before the AST.
 pub struct AST<'token> {
-    nodes: Vec<ASTNode<'token>>,
+    nodes: Vec<Node<'token>>,
 }
 
 impl Default for AST<'_> {
@@ -21,10 +21,10 @@ impl Default for AST<'_> {
 use std::slice;
 
 impl<'token> IntoIterator for &'token AST<'token> {
-    type Item = &'token ASTNode<'token>;
-    type IntoIter = slice::Iter<'token, ASTNode<'token>>;
+    type Item = &'token Node<'token>;
+    type IntoIter = slice::Iter<'token, Node<'token>>;
 
-    fn into_iter(self) -> slice::Iter<'token, ASTNode<'token>> {
+    fn into_iter(self) -> slice::Iter<'token, Node<'token>> {
         self.nodes.iter()
     }
 }
@@ -41,7 +41,7 @@ impl<'token> AST<'token> {
 
         let mut ast = AST::default();
 
-        // crank the parser and churn out ASTNodes
+        // crank the parser and churn out AST Nodes
         for n in parser {
             match n {
                 Ok(o) => match o {
@@ -52,20 +52,20 @@ impl<'token> AST<'token> {
                     println!("! ERROR: {}", e);
                     // TODO: return an error
                     break;
-                },
+                }
             }
         }
 
         ast
     }
 
-    fn push(&mut self, node: ASTNode<'token>) {
+    fn push(&mut self, node: Node<'token>) {
         self.nodes.push(node);
     }
 }
 
 impl<'token> AST<'token> {
-    pub fn process(&self) {
+    pub fn eval(&self) {
         // create an iterator over the AST nodes;
         // we'll use this to process each statement in the AST
         let nodes = self.into_iter();

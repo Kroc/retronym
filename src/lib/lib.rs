@@ -8,8 +8,10 @@
 extern crate pest_derive;
 
 pub mod ast;
-pub mod astnode;
+pub mod eval;
 pub mod error;
+pub mod expr;
+pub mod node;
 pub mod object;
 pub mod parser;
 pub mod segment;
