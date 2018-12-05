@@ -70,6 +70,23 @@ impl<'token> AST<'token> {
         // we'll use this to process each statement in the AST
         let nodes = self.into_iter();
 
+        //TODO:
+        // - evaluate keywords by returning definitions+exports for the object
+        //   i.e. macros and atoms need to be defined and exported for use in
+        //   other objects
+        //
+        // - establish a default segment for relocating once the AST has been
+        //   parsed into data tables
+        //
+        // - establish the default record type
+        //
+        // - read values. size those values based on the record type and build
+        //   records
+        //
+        // - begin writing the records to the segment, using name resolution.
+        //   names that cannot be resolved should be stored as an import for
+        //   the segment -- these values can be resolved at linking
+        //
         for n in nodes {
             // we need to determine if each statement is static or dynamic:
             //
@@ -82,11 +99,11 @@ impl<'token> AST<'token> {
             //   store them with a reference to their AST node for later
             //   calculation
             //
-            if n.is_static {
+            /*if n.is_static {
                 // for nodes containing only static information, execute the
                 // expression, folding the node (and children) down to a final
                 // value
-            }
+            }*/
             println!(": {}", n);
         }
     }

@@ -1,8 +1,8 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use crate::node::Operator;
 use crate::node::Node;
+use crate::ops::Operator;
 use crate::token::Token;
 
 #[derive(Debug)]
@@ -29,7 +29,7 @@ impl<'token> Expr<'token> {
     }
 }
 
-use std::fmt::{self,*};
+use std::fmt::{self, *};
 
 impl<'token> Display for Expr<'token> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

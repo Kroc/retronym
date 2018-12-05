@@ -19,8 +19,8 @@ pub struct RymParser<'token> {
     tokens: TokenStream<'token>,
 }
 
-use crate::node::{Node, ASTResult};
 use crate::error::*;
+use crate::node::{ASTResult, Node};
 
 impl<'token> RymParser<'token> {
     // note that we cannot implement `FromStr` due to the lifetime requirement?

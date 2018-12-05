@@ -2,8 +2,8 @@
 // BSD 2-clause licence; see LICENSE.TXT
 
 //! The AST `Node` is the core representation of source code in the program,
-//! it uses a different enum type to differentiate numbers, strings, macros
-//! and so on. AST nodes can contain other nodes, such as with expressions.
+//! it uses an enum to differentiate numbers, strings, macros and so on.
+//! AST nodes can contain other nodes, such as with expressions.
 
 use crate::error::*;
 use crate::token::MaybeToken;
@@ -15,7 +15,7 @@ use crate::token::MaybeToken;
 pub struct Node<'token> {
     /// The 'type' of the node, e.g. whether this is a literal number,
     /// an expression, a macro invocation etc. This can contain nested nodes!
-    pub kind: ASTKind<'token>,
+    pub kind: NodeKind<'token>,
     /// An optional reference back to the original source code,
     /// for error messages.
     pub token: MaybeToken<'token>,
@@ -29,7 +29,7 @@ pub type MaybeNode<'token> = Option<Node<'token>>;
 use crate::expr::Expr;
 
 #[derive(Debug)]
-pub enum ASTKind<'token> {
+pub enum NodeKind<'token> {
     /// An empty node, used for unimplemented node types.
     Void,
     /// An experssion -- i.e. a calculation
@@ -42,41 +42,15 @@ pub enum ASTKind<'token> {
     /// not treated as expression values.
     Str(String),
     /// A literal value.
-    Value(ASTValue),
+    Value(Value),
 }
 
 #[derive(Debug)]
-pub enum ASTValue {
+pub enum Value {
     /// An integer literal value.
     Int(i64),
     /// A floating point literal value.
     Float(f64),
-}
-
-#[derive(Debug)]
-pub enum Operator {
-    /// Addition operator "+"
-    Add,
-    /// Subtraction operator "-"
-    Sub,
-    /// Multiplication operator "*"
-    Mul,
-    /// Division operator "/"
-    Div,
-    /// Modulo operator "\\"
-    Mod,
-    /// Power/Exponention Operator "**"
-    Pow,
-    /// Bitwise eXclusive OR operator "^"
-    Xor,
-    /// Bitwise AND operator "&"
-    And,
-    /// Bitwise OR operator "|"
-    Bor,
-    /// Bitwise SHift-Left operator "<<"
-    Shl,
-    /// Bitwise SHift-Right operator ">>"
-    Shr,
 }
 
 /// During building of the `AST`, the methods return either a new `Node` to
@@ -84,7 +58,7 @@ pub enum Operator {
 pub type ASTResult<'token> = ParseResult<MaybeNode<'token>>;
 
 impl From<ParseError> for ASTResult<'_> {
-    /// For brevity, allow conversion of a ParseError to an ASTResult,
+    /// For brevity, allow conversion of a `ParseError` to an `ASTResult`,
     /// i.e. `Result<Err(ParseError)>`.
     fn from(parse_error: ParseError) -> Self {
         Err(parse_error)
@@ -108,7 +82,7 @@ impl<'token> From<Token<'token>> for ASTResult<'token> {
 impl Default for Node<'_> {
     fn default() -> Self {
         Self {
-            kind: ASTKind::Void,
+            kind: NodeKind::Void,
             token: None,
             is_static: true,
         }
@@ -125,7 +99,7 @@ impl<'token> Node<'token> {
             // the expression can only be static if *both* sides
             // of the expression are also static
             is_static: left.is_static && right.is_static,
-            kind: ASTKind::Expr(Box::new(Expr::new(left, &oper, right))),
+            kind: NodeKind::Expr(Box::new(Expr::new(left, &oper, right))),
             token: Some(oper),
         }
     }
@@ -142,27 +116,27 @@ impl<'token> From<Token<'token>> for Node<'token> {
         Node {
             kind: match token.as_rule() {
                 // parse an integer number:
-                Rule::int_number => ASTKind::Value(ASTValue::Int(
+                Rule::int_number => NodeKind::Value(Value::Int(
                     // parse the text as an integer number
                     token.as_str().parse::<i64>().unwrap(),
                 )),
                 // parse a hexadecimal number:
-                Rule::hex_number => ASTKind::Value(ASTValue::Int(
+                Rule::hex_number => NodeKind::Value(Value::Int(
                     // note that we have to drop the sigil. limitations in
                     // Pest make this difficult to do at the grammar level
                     i64::from_str_radix(&token.as_str()[1..], 16).unwrap(),
                 )),
                 // parse a binary number:
-                Rule::bin_number => ASTKind::Value(ASTValue::Int(
+                Rule::bin_number => NodeKind::Value(Value::Int(
                     i64::from_str_radix(&token.as_str()[1..], 2).unwrap(),
                 )),
                 // an atom is returned as a string
-                Rule::atom => ASTKind::Atom(
+                Rule::atom => NodeKind::Atom(
                     //TODO: messy
                     token.as_str().to_string(),
                 ),
                 // a macro is returned as a string
-                Rule::mac => ASTKind::Macro(
+                Rule::mac => NodeKind::Macro(
                     //TODO: messy
                     token.as_str().to_string(),
                 ),
@@ -185,27 +159,6 @@ impl<'token> From<Token<'token>> for Node<'token> {
     }
 }
 
-impl From<&Token<'_>> for Operator {
-    /// Convert a token into an `Operator` enum.
-    /// Panics if using a token that is not an operator!
-    fn from(token: &Token<'_>) -> Self {
-        match token.as_rule() {
-            Rule::op_add => Operator::Add,
-            Rule::op_sub => Operator::Sub,
-            Rule::op_mul => Operator::Mul,
-            Rule::op_div => Operator::Div,
-            Rule::op_mod => Operator::Mod,
-            Rule::op_pow => Operator::Pow,
-            Rule::op_xor => Operator::Xor,
-            Rule::op_and => Operator::And,
-            Rule::op_bor => Operator::Bor,
-            Rule::op_shl => Operator::Shl,
-            Rule::op_shr => Operator::Shr,
-            _ => panic!("Not an operator token!"),
-        }
-    }
-}
-
 //==============================================================================
 
 use std::fmt::{self, *};
@@ -215,43 +168,21 @@ impl Display for Node<'_> {
     /// essentially outputting normalised source code
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.kind {
-            ASTKind::Void => write!(f, "<VOID>"),
-            ASTKind::Expr(ref x) => write!(f, "{}", x),
-            ASTKind::Atom(ref a) => write!(f, "{}", a),
-            ASTKind::Macro(ref m) => write!(f, "{}", m),
-            ASTKind::Str(ref s) => write!(f, "{}", s),
-            ASTKind::Value(ref v) => write!(f, "{}", v),
+            NodeKind::Void => write!(f, "<VOID>"),
+            NodeKind::Expr(ref x) => write!(f, "{}", x),
+            NodeKind::Atom(ref a) => write!(f, "{}", a),
+            NodeKind::Macro(ref m) => write!(f, "{}", m),
+            NodeKind::Str(ref s) => write!(f, "{}", s),
+            NodeKind::Value(ref v) => write!(f, "{}", v),
         }
     }
 }
 
-impl Display for ASTValue {
+impl Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ASTValue::Int(i) => write!(f, "{}", i),
-            ASTValue::Float(d) => write!(f, "{}", d),
+            Value::Int(i) => write!(f, "{}", i),
+            Value::Float(d) => write!(f, "{}", d),
         }
-    }
-}
-
-impl Display for Operator {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            match self {
-                Operator::Add => "+",
-                Operator::Sub => "-",
-                Operator::Mul => "*",
-                Operator::Div => "/",
-                Operator::Mod => r"\\",
-                Operator::Pow => "**",
-                Operator::Xor => "^",
-                Operator::And => "&",
-                Operator::Bor => "|",
-                Operator::Shl => "<<",
-                Operator::Shr => ">>",
-            }
-        )
     }
 }

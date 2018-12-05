@@ -16,7 +16,9 @@ pub struct Object {
 
 impl Default for Object {
     fn default() -> Self {
-        Self { _blocks: Vec::new() }
+        Self {
+            _blocks: Vec::new(),
+        }
     }
 }
 
@@ -50,7 +52,7 @@ impl Object {
         // - we need to locate the placeholders (imports) and their size
         //   (size will be set by the record type)
         // - exports are created as we populate the object
-        
+
         ast.eval();
 
         Self::default()

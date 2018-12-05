@@ -1,33 +1,56 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-use crate::node::{Node,ASTKind,ASTValue};
+use crate::node::{Node, NodeKind, Value};
 
-pub enum ASTFoldResult {
-    // Result of the fold is an integer.
+/// The `Eval` trait is used when we want to 'run' the source code --
+/// stored in `AST` form in memory -- and want to return concrete values
+/// from program statements.
+pub trait Eval {
+    fn eval(&self) -> Evaluation;
+}
+
+pub enum Evaluation {
+    // Result of the eval is an integer.
     Int(i64),
-    // Result of the fold is a float.
+    // Result of the eval is a float.
     Float(f64),
     //TODO: result of a dyanmic expression should be a relaxtion joint
     //      or some such deferred calculation
 }
 
-impl Node<'_> {
-    fn _fold(&self) -> ASTFoldResult {
+use std::fmt::{self,*};
+
+impl Display for Evaluation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl Eval for Node<'_> {
+    /// Evaluating a node attempts to calculate the 'value' of a node; literal
+    /// values (ints, floats) are returned as-is. expressions are calculated
+    /// and return a literal value if all elements of the expression are
+    /// literals too (e.g. `5 + 5` = `10`).
+    fn eval(&self) -> Evaluation {
         match &self.kind {
-            ASTKind::Value(v) => match v {
-                ASTValue::Int(i) => ASTFoldResult::Int(*i),
-                ASTValue::Float(d) => ASTFoldResult::Float(*d),
+            // return literal values as-is
+            NodeKind::Value(v) => match v {
+                Value::Int(i) => Evaluation::Int(*i),
+                Value::Float(d) => Evaluation::Float(*d),
             },
+            // for expressions, defer to the expression's implementation
+            NodeKind::Expr(x) => x.eval(),
             _ => unimplemented!(),
         }
     }
 }
 
 use crate::expr::Expr;
+use crate::ops::Operator;
 
-impl Expr<'_> {
-    fn _fold(&self) -> ASTFoldResult {
+impl Eval for Expr<'_> {
+    fn eval(&self) -> Evaluation {
         // we need to check if the expression is static or dynamic:
         //
         // - static expressions require no outside information
@@ -39,6 +62,12 @@ impl Expr<'_> {
         //   with a reference to their AST node for later calculation
         //
 
-        unimplemented!()
+        match &self.oper {
+            Operator::Add => self.left.eval() + self.right.eval(),
+            Operator::Sub => self.left.eval() - self.right.eval(),
+            Operator::Mul => self.left.eval() * self.right.eval(),
+            Operator::Div => self.left.eval() / self.right.eval(),
+            _ => unimplemented!(),
+        }
     }
 }
