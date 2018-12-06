@@ -1,9 +1,10 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-// Pest:
-//------------------------------------------------------------------------------
+//! Retronym is a thoroughly modern assembler for retro consoles
+//! and computer systems.
 
+// Parsing provided by Pest: https://pest.rs/
 #[macro_use]
 extern crate pest_derive;
 

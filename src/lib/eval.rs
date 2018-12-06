@@ -19,11 +19,15 @@ pub enum Evaluation {
     //      or some such deferred calculation
 }
 
-use std::fmt::{self,*};
+use std::fmt::{self, *};
 
 impl Display for Evaluation {
+    /// Pretty-print an eval result.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self)
+        match self {
+            Evaluation::Int(i) => write!(f, "{}", i),
+            Evaluation::Float(d) => write!(f, "{}", d),
+        }
     }
 }
 
@@ -41,6 +45,7 @@ impl Eval for Node<'_> {
             },
             // for expressions, defer to the expression's implementation
             NodeKind::Expr(x) => x.eval(),
+            // TODO: dynamic elements
             _ => unimplemented!(),
         }
     }
@@ -61,7 +66,6 @@ impl Eval for Expr<'_> {
         //   since we cannot produce a value with these yet, store them
         //   with a reference to their AST node for later calculation
         //
-
         match &self.oper {
             Operator::Add => self.left.eval() + self.right.eval(),
             Operator::Sub => self.left.eval() - self.right.eval(),
