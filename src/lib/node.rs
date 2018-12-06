@@ -66,8 +66,8 @@ impl From<ParseError> for ASTResult<'_> {
 }
 
 impl<'token> From<Node<'token>> for ASTResult<'token> {
-    fn from(ast_node: Node<'token>) -> Self {
-        Ok(Some(ast_node))
+    fn from(node: Node<'token>) -> Self {
+        Ok(Some(node))
     }
 }
 

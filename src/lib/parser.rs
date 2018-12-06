@@ -36,6 +36,9 @@ impl<'token> RymParser<'token> {
     }
 
     fn parse_statement(&mut self) -> ASTResult<'token> {
+        if self.tokens.is_atom() {
+            return self.parse_atom();
+        }
         if self.tokens.is_macro() {
             return self.parse_macro();
         }
@@ -45,32 +48,49 @@ impl<'token> RymParser<'token> {
         Ok(None)
     }
 
-    /// Parse a macro invocation.
-    fn parse_macro(&mut self) -> ASTResult<'token> {
-        // well, if there are no tokens, this can't be a macro
-        if self.tokens.is_eof() {
+    /// Parse an atom invocation.
+    fn parse_atom(&mut self) -> ASTResult<'token> {
+        // if the current token is not an atom,
+        // this is not our concern.
+        if !self.tokens.is_atom() {
             return Ok(None);
         }
 
+        // build a `Node` for an atom invocation
+        ASTResult::from(Node::from(
+            // retrieve the current token, containing the atom name
+            // (and move the tokenstream to the next automatically)
+            self.tokens.consume().unwrap()
+        ))
+    }
+
+    /// Parse a macro invocation.
+    fn parse_macro(&mut self) -> ASTResult<'token> {
         // if the current token is not a macro,
         // this is not our concern.
         if !self.tokens.is_macro() {
             return Ok(None);
         }
 
-        // build a `Node` for a macro invocation.
-        // TODO: messy
-        let token = self.tokens.consume().unwrap();
-        ASTResult::from(Node::from(token))
+        // build a `Node` for a macro invocation
+        ASTResult::from(Node::from(
+            // retrieve the current token, containing the macro name
+            // (and move the tokenstream to the next automatically)
+            self.tokens.consume().unwrap()
+        ))
     }
 
-    /// Parse an expression, returning an AST node representing that expression.
+    /// Parse an expression, returning an AST node
+    /// representing that expression.
     ///
     /// If the current token is not the beginning of an expression returns
     /// `None`; the caller can decide if this is unexpected or not; otherwise
     /// returns an `ASTResult` of either a `Node` of the expression, or the
     /// error encountered.
     fn parse_expr(&mut self) -> ASTResult<'token> {
+        // if the current token is not a valid opening for an expression
+        // (including if we've reached end-of-file), then return a
+        // "unrecognised" state, the caller decides if this is unexpected.
         if !self.tokens.is_expr() {
             return Ok(None);
         }
@@ -89,6 +109,8 @@ impl<'token> RymParser<'token> {
             return ASTResult::from(left);
         }
 
+        // parse the operator and right-hand-side, passing in
+        // the left-hand value we already have
         self.parse_expr_inner(left)
     }
 
@@ -138,7 +160,7 @@ impl<'token> Iterator for RymParser<'token> {
             // pass errors through
             Err(e) => Some(Err(e)),
             Ok(option) => match option {
-                Some(ast_node) => Some(ASTResult::from(ast_node)),
+                Some(node) => Some(ASTResult::from(node)),
                 None => None,
             },
         }

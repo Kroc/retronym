@@ -59,6 +59,13 @@ impl<'token> TokenStream<'token> {
         }
     }
 
+    pub fn is_atom(&self) -> bool {
+        match self.tokens.get(self.index) {
+            Some(t) => t.is_atom(),
+            None => false,
+        }
+    }
+
     pub fn is_macro(&self) -> bool {
         match self.tokens.get(self.index) {
             Some(t) => t.is_macro(),
