@@ -69,8 +69,6 @@ impl<'token> AST<'token> {
     }
 }
 
-use crate::eval::Eval;
-
 impl<'token> AST<'token> {
     pub fn eval(&self) {
         // create an iterator over the AST nodes;
@@ -111,7 +109,7 @@ impl<'token> AST<'token> {
                 // expression, folding the node (and children) down to a final
                 // value
             }*/
-            println!(": {}", n.eval());
+            println!(": {}", n);
         }
     }
 }

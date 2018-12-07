@@ -11,7 +11,6 @@ extern crate pest_derive;
 pub mod ast;
 pub mod atoms;
 pub mod error;
-pub mod eval;
 pub mod expr;
 pub mod node;
 pub mod object;
