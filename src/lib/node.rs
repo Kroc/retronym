@@ -125,7 +125,7 @@ impl<'token> Node<'token> {
 
 //==============================================================================
 
-use crate::parser::Rule;
+use crate::parser::pest::Rule;
 use crate::token::Token;
 use std::convert::From;
 

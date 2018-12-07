@@ -36,18 +36,15 @@ impl<'token> IntoIterator for &'token AST<'token> {
 
 //==============================================================================
 
-use crate::parser::RymParser;
+use crate::parser::Parser;
 
 impl<'token> AST<'token> {
     pub fn new_from_str(source: &'token str) -> Self {
-        // create a parser from the token stream;
-        // this will output AST nodes
-        let parser = RymParser::from_str(source);
+        let p = Parser::from_str(source);
 
         let mut ast = AST::default();
 
-        // crank the parser and churn out AST Nodes
-        for n in parser {
+        for n in p {
             match n {
                 Ok(o) => match o {
                     Some(a) => ast.push(a),

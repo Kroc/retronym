@@ -5,7 +5,7 @@
 //! interaction from the AST. The `token` module wraps the core parsing output
 //! of Pest, hiding the macro-generated `Rule`s from token consumers.
 
-use crate::parser::Rule;
+use crate::parser::pest::Rule;
 use pest::iterators::Pair;
 use pest::Span;
 

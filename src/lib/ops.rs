@@ -56,7 +56,7 @@ impl Display for Operator {
     }
 }
 
-use crate::parser::Rule;
+use crate::parser::pest::Rule;
 use crate::token::Token;
 
 impl From<&Token<'_>> for Operator {

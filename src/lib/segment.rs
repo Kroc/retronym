@@ -14,9 +14,7 @@ pub struct Segment {
     /*TODO: segment properties (load address, run address, alignment)
             are determined by the linker script, so only a reference
             to that segment data will be needed here */
-    
     //TODO: imports and exports
-
     _spans: Vec<Span>,
 }
 
