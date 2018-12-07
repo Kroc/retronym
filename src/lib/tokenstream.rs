@@ -59,6 +59,13 @@ impl<'token> TokenStream<'token> {
         }
     }
 
+    pub fn is_keyword(&self) -> bool {
+        match self.tokens.get(self.index) {
+            Some(t) => t.is_keyword(),
+            None => false,
+        }
+    }
+
     pub fn is_atom(&self) -> bool {
         match self.tokens.get(self.index) {
             Some(t) => t.is_atom(),

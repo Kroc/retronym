@@ -34,7 +34,10 @@ pub enum NodeKind<'token> {
     Void,
     /// An experssion -- i.e. a calculation
     Expr(Box<Expr<'token>>),
-    /// An atom.
+    /// An atom definition. Defines a new Atom and exports it. When the final
+    /// linking occurs, all atoms used must be defined.
+    DefAtom(String),
+    /// An atom invocation.
     Atom(String),
     /// A macro invocation.
     Macro(String),
@@ -103,6 +106,21 @@ impl<'token> Node<'token> {
             token: Some(oper),
         }
     }
+
+    /// Returns a node that defines a new Atom. There is no single token that
+    /// does this because the use of a keyword and then atom (e.g. "atom A"),
+    /// meaning that you cannot just convert the token into a node like with
+    /// the literals, e.g. `Node::from(token)`.
+    pub fn new_atom(atom: Token<'token>) -> Self {
+        Self {
+            kind: NodeKind::DefAtom(atom.as_str().to_string()),
+            // store the reference back to the original source code;
+            // this will be at the atom name, not the "atom" keyword
+            token: Some(atom),
+            // node is static because it does not require name resolution
+            is_static: true,
+        }
+    }
 }
 
 //==============================================================================
@@ -169,6 +187,7 @@ impl Display for Node<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.kind {
             NodeKind::Void => write!(f, "<VOID>"),
+            NodeKind::DefAtom(ref a) => write!(f, "atom {}", a),
             NodeKind::Expr(ref x) => write!(f, "{}", x),
             NodeKind::Atom(ref a) => write!(f, "{}", a),
             NodeKind::Macro(ref m) => write!(f, "{}", m),

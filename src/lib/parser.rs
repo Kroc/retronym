@@ -36,8 +36,8 @@ impl<'token> RymParser<'token> {
     }
 
     fn parse_statement(&mut self) -> ASTResult<'token> {
-        if self.tokens.is_atom() {
-            return self.parse_atom();
+        if self.tokens.is_keyword() {
+            return self.parse_keyword();
         }
         if self.tokens.is_macro() {
             return self.parse_macro();
@@ -48,6 +48,46 @@ impl<'token> RymParser<'token> {
         Ok(None)
     }
 
+    /// Parse a keyword; for defining new Atoms and Macros.
+    fn parse_keyword(&mut self) -> ASTResult<'token> {
+        if !self.tokens.is_keyword() {
+            return Ok(None);
+        }
+
+        // which keyword?
+        if self.tokens.token().unwrap().is_keyword_atom() {
+            return self.parse_keyword_atom();
+        }
+        if self.tokens.token().unwrap().is_keyword_macro() {
+            return Ok(None);
+        }
+
+        Ok(None)
+    }
+
+    /// Parse an Atom definition.
+    fn parse_keyword_atom(&mut self) -> ASTResult<'token> {
+        if !self.tokens.token().unwrap().is_keyword_atom() {
+            return Ok(None);
+        }
+        // "atom" keyword is present, skip over it
+        self.tokens.consume();
+
+        // the next token *must* be an Atom name and not any kind
+        // of expression or macro that might return an Atom
+        if !self.tokens.is_atom() {
+            return ASTResult::from(ParseError::unexpected());
+        }
+
+        // build an atom definition node
+        ASTResult::from(Node::new_atom(
+            // consume the token with the atom's name,
+            // passing it into the node being built
+            self.tokens.consume().unwrap(),
+        ))
+    }
+
+    /*
     /// Parse an atom invocation.
     fn parse_atom(&mut self) -> ASTResult<'token> {
         // if the current token is not an atom,
@@ -63,6 +103,7 @@ impl<'token> RymParser<'token> {
             self.tokens.consume().unwrap()
         ))
     }
+    */
 
     /// Parse a macro invocation.
     fn parse_macro(&mut self) -> ASTResult<'token> {
@@ -76,7 +117,7 @@ impl<'token> RymParser<'token> {
         ASTResult::from(Node::from(
             // retrieve the current token, containing the macro name
             // (and move the tokenstream to the next automatically)
-            self.tokens.consume().unwrap()
+            self.tokens.consume().unwrap(),
         ))
     }
 
@@ -89,7 +130,7 @@ impl<'token> RymParser<'token> {
     /// error encountered.
     fn parse_expr(&mut self) -> ASTResult<'token> {
         // if the current token is not a valid opening for an expression
-        // (including if we've reached end-of-file), then return a
+        // (including if we've reached end-of-file), then return an
         // "unrecognised" state, the caller decides if this is unexpected.
         if !self.tokens.is_expr() {
             return Ok(None);
@@ -156,6 +197,15 @@ impl<'token> Iterator for RymParser<'token> {
 
     /// When you turn the crank on the parser, it spits out AST nodes.
     fn next(&mut self) -> Option<ASTResult<'token>> {
+        /*
+        // retrieve the current token;
+        match self.tokens.token() {
+            some(t) => token = t,
+            // if we're at the end of the file, return no further nodes
+            None => return None,
+        }
+        */
+
         match self.parse_statement() {
             // pass errors through
             Err(e) => Some(Err(e)),

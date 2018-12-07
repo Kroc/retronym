@@ -39,7 +39,10 @@ value           = _{
 
 //==============================================================================
 
-keyword         = { "atom" | "macro" }
+keyword         = @{ keyword_atom | keyword_macro }
+
+keyword_atom    = { "atom" }
+keyword_macro   = { "macro" }
 
 atom            = { ASCII_ALPHA_UPPER ~ ( ASCII_DIGIT | ASCII_ALPHA_UPPER )* }
 

@@ -10,6 +10,8 @@ pub trait Eval {
     fn eval(&self) -> Evaluation;
 }
 
+use crate::atoms::Atom;
+
 pub enum Evaluation {
     // Result of the eval is an integer.
     Int(i64),
@@ -17,6 +19,7 @@ pub enum Evaluation {
     Float(f64),
     //TODO: result of a dyanmic expression should be a relaxtion joint
     //      or some such deferred calculation
+    //Atom(Atom)
 }
 
 use std::fmt::{self, *};
@@ -27,6 +30,7 @@ impl Display for Evaluation {
         match self {
             Evaluation::Int(i) => write!(f, "{}", i),
             Evaluation::Float(d) => write!(f, "{}", d),
+            //Evaluation::Atom(a) => write!(f, "{}", a),
         }
     }
 }
@@ -45,6 +49,8 @@ impl Eval for Node<'_> {
             },
             // for expressions, defer to the expression's implementation
             NodeKind::Expr(x) => x.eval(),
+            // defining an Atom returns a new Atom struct
+            //NodeKind::DefAtom(a) => Evaluation::Atom(Atom::new(a)),
             // TODO: dynamic elements
             _ => unimplemented!(),
         }

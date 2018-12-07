@@ -55,10 +55,24 @@ impl<'token> Display for Token<'token> {
 }
 
 impl<'t> Token<'t> {
-    /// Is this a macro invocation?
-    pub fn is_macro(&self) -> bool {
+    /// Is this a keyword?
+    pub fn is_keyword(&self) -> bool {
         match self.as_rule() {
-            Rule::mac => true,
+            Rule::keyword_atom | Rule::keyword_macro => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_keyword_atom(&self) -> bool {
+        match self.as_rule() {
+            Rule::keyword_atom => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_keyword_macro(&self) -> bool {
+        match self.as_rule() {
+            Rule::keyword_macro => true,
             _ => false,
         }
     }
@@ -67,6 +81,14 @@ impl<'t> Token<'t> {
     pub fn is_atom(&self) -> bool {
         match self.as_rule() {
             Rule::atom => true,
+            _ => false,
+        }
+    }
+
+    /// Is this a Macro?
+    pub fn is_macro(&self) -> bool {
+        match self.as_rule() {
+            Rule::mac => true,
             _ => false,
         }
     }
@@ -87,17 +109,6 @@ impl<'t> Token<'t> {
         }
     }
 
-    /// Is this a 'value' -- i.e. a token that can return a value.
-    /// This would not include macros as they are statements and not values,
-    /// nor strings as they are self-contained lists and not an individual
-    /// value.
-    pub fn is_value(&self) -> bool {
-        match self.as_rule() {
-            Rule::int_number | Rule::hex_number | Rule::bin_number => true,
-            _ => false,
-        }
-    }
-
     /// Is this a valid opening token for an expression? This wouldn't include
     /// operators because an expression cannot begin with an operator.
     pub fn is_expr(&self) -> bool {
@@ -106,6 +117,17 @@ impl<'t> Token<'t> {
             | Rule::int_number
             | Rule::hex_number
             | Rule::bin_number => true,
+            _ => false,
+        }
+    }
+
+    /// Is this a 'value' -- i.e. a token that can return a value.
+    /// This would not include macros as they are statements and not values,
+    /// nor strings as they are self-contained lists and not an individual
+    /// value.
+    pub fn is_value(&self) -> bool {
+        match self.as_rule() {
+            Rule::int_number | Rule::hex_number | Rule::bin_number => true,
             _ => false,
         }
     }
