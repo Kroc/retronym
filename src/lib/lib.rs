@@ -9,6 +9,7 @@
 #[macro_use]
 extern crate pest_derive;
 
+pub mod assembler;
 pub mod ast;
 pub mod atom;
 pub mod error;
@@ -18,6 +19,14 @@ pub mod node;
 pub mod object;
 pub mod ops;
 pub mod parser;
+pub mod record;
 pub mod segment;
+pub mod table;
 pub mod token;
 pub mod tokenizer;
+
+use crate::object::Object;
+
+pub fn assemble_str(source: &str) {
+    let _object = Object::new_from_str(source);
+}
