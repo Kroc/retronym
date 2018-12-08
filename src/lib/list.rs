@@ -12,6 +12,7 @@ use crate::node::Node;
 
 #[derive(Debug)]
 pub struct List<'token> {
+    //==========================================================================
     nodes: Vec<Node<'token>>,
 }
 
@@ -26,9 +27,11 @@ impl Default for List<'_> {
 use std::fmt::{self, *};
 
 impl Display for List<'_> {
+    //--------------------------------------------------------------------------
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
+            //TODO: indent nesting?
             "(\n{}\n)",
             self.nodes.iter().fold(String::new(), |acc, node| format!(
                 "{}{}, \n",
@@ -52,6 +55,7 @@ impl<'token> IntoIterator for &'token List<'token> {
 }
 
 impl<'token> List<'token> {
+    //--------------------------------------------------------------------------
     pub fn push(&mut self, node: Node<'token>) {
         self.nodes.push(node);
     }

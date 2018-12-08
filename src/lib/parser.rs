@@ -83,6 +83,7 @@ impl<'token> Parser<'token> {
     }
 
     /// Parse an Atom definition.
+    #[allow(clippy::needless_pass_by_value)]
     fn parse_keyword_atom(
         &mut self,
         token: Token<'token>,
@@ -90,6 +91,7 @@ impl<'token> Parser<'token> {
         if !token.is_keyword_atom() {
             return Ok(None);
         }
+        
         // "atom" keyword is present, skip over it
         let token = self.tokens.next().unwrap();
 

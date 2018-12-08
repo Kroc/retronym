@@ -26,6 +26,7 @@ pub struct Node<'token> {
 
 pub type MaybeNode<'token> = Option<Node<'token>>;
 
+use crate::atom::Atom;
 use crate::expr::Expr;
 use crate::list::List;
 
@@ -33,16 +34,16 @@ use crate::list::List;
 pub enum NodeKind<'token> {
     /// An empty node.
     Void,
-    /// An atom definition. Defines a new Atom and exports it. When the final
+    /// An Atom definition. Defines a new Atom and exports it. When the final
     /// linking occurs, all atoms used must be defined.
-    DefAtom(String),
+    DefAtom(Atom),
     /// A list.
     List(Box<List<'token>>),
-    /// An experssion -- i.e. a calculation
+    /// An expression -- i.e. a calculation
     Expr(Box<Expr<'token>>),
-    /// An atom invocation.
+    /// An Atom invocation.
     Atom(String),
-    /// A macro invocation.
+    /// A Macro invocation.
     Macro(String),
     /// A string literal. Since strings are self-contained lists, these are
     /// not treated as expression values.
@@ -55,8 +56,8 @@ pub enum NodeKind<'token> {
 pub enum Value {
     /// An integer literal value.
     Int(i64),
-    /// An unsigned literal value as used by Binary and Hexadecimal numbers
-    /// to represent raw numbers up to 64-bits
+    /// An unsigned literal value as used by binary and hexadecimal
+    /// numbers to represent raw numbers up to 64-bits.
     UInt(u64),
     /// A floating point literal value.
     Float(f64),
@@ -114,14 +115,15 @@ impl<'token> Node<'token> {
     }
 
     /// Returns a node that defines a new Atom. There is no single token that
-    /// does this because the use of a keyword and then atom (e.g. "atom A"),
+    /// does this because the use of a keyword and then Atom (e.g. "atom A"),
     /// meaning that you cannot just convert the token into a node like with
     /// the literals, e.g. `Node::from(token)`.
     pub fn new_atom(atom: Token<'token>) -> Self {
         Self {
-            kind: NodeKind::DefAtom(atom.as_str().to_string()),
+            // create the Atom and embed it in the node
+            kind: NodeKind::DefAtom(Atom::new(atom.as_str())),
             // store the reference back to the original source code;
-            // this will be at the atom name, not the "atom" keyword
+            // this will be at the Atom name, not the "atom" keyword
             token: Some(atom),
             // node is static because it does not require name resolution
             is_static: true,
