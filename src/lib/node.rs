@@ -27,16 +27,19 @@ pub struct Node<'token> {
 pub type MaybeNode<'token> = Option<Node<'token>>;
 
 use crate::expr::Expr;
+use crate::list::List;
 
 #[derive(Debug)]
 pub enum NodeKind<'token> {
-    /// An empty node, used for unimplemented node types.
+    /// An empty node.
     Void,
-    /// An experssion -- i.e. a calculation
-    Expr(Box<Expr<'token>>),
     /// An atom definition. Defines a new Atom and exports it. When the final
     /// linking occurs, all atoms used must be defined.
     DefAtom(String),
+    /// A list.
+    List(Box<List<'token>>),
+    /// An experssion -- i.e. a calculation
+    Expr(Box<Expr<'token>>),
     /// An atom invocation.
     Atom(String),
     /// A macro invocation.
@@ -52,6 +55,9 @@ pub enum NodeKind<'token> {
 pub enum Value {
     /// An integer literal value.
     Int(i64),
+    /// An unsigned literal value as used by Binary and Hexadecimal numbers
+    /// to represent raw numbers up to 64-bits
+    UInt(u64),
     /// A floating point literal value.
     Float(f64),
 }
@@ -132,31 +138,11 @@ impl<'token> From<Token<'token>> for Node<'token> {
     fn from(token: Token<'token>) -> Node<'_> {
         Node {
             kind: match token.kind() {
-                // parse an integer number:
-                TokenKind::Int => NodeKind::Value(Value::Int(
-                    // parse the text as an integer number
-                    token.as_str().parse::<i64>().unwrap(),
-                )),
-                // parse a hexadecimal number:
-                TokenKind::Hex => NodeKind::Value(Value::Int(
-                    // note that we have to drop the sigil. limitations in
-                    // Pest make this difficult to do at the grammar level
-                    i64::from_str_radix(&token.as_str()[1..], 16).unwrap(),
-                )),
-                // parse a binary number:
-                TokenKind::Bin => NodeKind::Value(Value::Int(
-                    i64::from_str_radix(&token.as_str()[1..], 2).unwrap(),
-                )),
-                // an atom is returned as a string
-                TokenKind::Atom => NodeKind::Atom(
-                    //TODO: messy
-                    token.as_str().to_string(),
-                ),
-                // a macro is returned as a string
-                TokenKind::Macro => NodeKind::Macro(
-                    //TODO: messy
-                    token.as_str().to_string(),
-                ),
+                TokenKind::Int(i) => NodeKind::Value(Value::Int(i)),
+                TokenKind::Hex(h) => NodeKind::Value(Value::UInt(h)),
+                TokenKind::Bin(b) => NodeKind::Value(Value::UInt(b)),
+                TokenKind::Atom(s) => NodeKind::Atom(s),
+                TokenKind::Macro(s) => NodeKind::Macro(s),
                 _ => panic!(
                     "Not a `Token` that can be converted into an `Node`."
                 ),
@@ -181,6 +167,7 @@ impl Display for Node<'_> {
         match self.kind {
             NodeKind::Void => write!(f, "<VOID>"),
             NodeKind::DefAtom(ref a) => write!(f, "atom {}", a),
+            NodeKind::List(ref l) => write!(f, "{}", l),
             NodeKind::Expr(ref x) => write!(f, "{}", x),
             NodeKind::Atom(ref a) => write!(f, "{}", a),
             NodeKind::Macro(ref m) => write!(f, "{}", m),
@@ -194,6 +181,7 @@ impl Display for Value {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Value::Int(i) => write!(f, "{}", i),
+            Value::UInt(u) => write!(f, "{}", u),
             Value::Float(d) => write!(f, "{}", d),
         }
     }

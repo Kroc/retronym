@@ -7,19 +7,20 @@
 //! words letter-by-letter any more.
 
 use crate::node::Node;
+use crate::list::List;
 
 /// The "Abstract Syntax Tree" is a machine understandable respresentation of
 /// some source code. Because AST nodes can contain a reference back to the
 /// original source code (token) for errors, the `'token` lifetime is used
 /// so that the source code is not deallocated before the AST.
 pub struct AST<'token> {
-    nodes: Vec<Node<'token>>,
+    nodes: List<'token>,
 }
 
 impl Default for AST<'_> {
     /// Gives you an empty AST structure.
     fn default() -> Self {
-        AST { nodes: Vec::new() }
+        AST { nodes: List::default() }
     }
 }
 
@@ -30,7 +31,7 @@ impl<'token> IntoIterator for &'token AST<'token> {
     type IntoIter = slice::Iter<'token, Node<'token>>;
 
     fn into_iter(self) -> slice::Iter<'token, Node<'token>> {
-        self.nodes.iter()
+        self.nodes.into_iter()
     }
 }
 

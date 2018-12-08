@@ -35,13 +35,13 @@ impl<'t> From<Pair<'t, Rule>> for Token<'t> {
 pub enum TokenKind {
     KeywordAtom,
     KeywordMacro,
-    Int,
-    Hex,
-    Bin,
-    Float,
-    Atom,
-    Macro,
-    String,
+    Int(i64),
+    Hex(u64),
+    Bin(u64),
+    Float(f64),
+    Atom(String),
+    Macro(String),
+    String(String),
     OpAdd,
     OpSub,
     OpMul,
@@ -55,7 +55,7 @@ pub enum TokenKind {
     OpShr,
 }
 
-impl<'t> Token<'t> {
+impl<'token> Token<'token> {
     /// Our lexer/parser, Pest, generates an enum, `Rule`, from the original
     /// grammar file. This method returns the `Rule` discriminant for the
     /// matched production, for example: `Rule::expr` for expressions.
@@ -64,20 +64,38 @@ impl<'t> Token<'t> {
         self.0
     }
 
-    pub fn as_str(&self) -> &'t str {
+    pub fn as_str(&self) -> &'token str {
         self.1.as_str()
     }
+}
 
+impl<'token> Token<'token> {
     pub fn kind(&self) -> TokenKind {
         match self.as_rule() {
             Rule::keyword_atom => TokenKind::KeywordAtom,
             Rule::keyword_macro => TokenKind::KeywordMacro,
-            Rule::int_number => TokenKind::Int,
-            Rule::hex_number => TokenKind::Hex,
-            Rule::bin_number => TokenKind::Bin,
-            Rule::atom => TokenKind::Atom,
-            Rule::mac => TokenKind::Macro,
-            Rule::string => TokenKind::String,
+            Rule::int_number => TokenKind::Int(
+                i64::from_str_radix(&self.as_str()[1..], 16).unwrap(),
+            ),
+            Rule::hex_number => TokenKind::Hex(
+                // note that we have to drop the sigil. limitations in
+                // Pest make this difficult to do at the grammar level
+                u64::from_str_radix(&self.as_str()[1..], 16).unwrap()
+            ),
+            Rule::bin_number => TokenKind::Bin(
+                // note that we have to drop the sigil. limitations in
+                // Pest make this difficult to do at the grammar level
+                u64::from_str_radix(&self.as_str()[1..], 2).unwrap()
+            ),
+            Rule::atom => TokenKind::Atom(
+                self.as_str().to_string()
+            ),
+            Rule::mac => TokenKind::Macro(
+                self.as_str().to_string()
+            ),
+            Rule::string => TokenKind::String(
+                self.as_str().to_string()
+            ),
             Rule::op_add => TokenKind::OpAdd,
             Rule::op_sub => TokenKind::OpSub,
             Rule::op_mul => TokenKind::OpMul,

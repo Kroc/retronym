@@ -5,12 +5,13 @@
 //! almost entirely of implicit lists and their elements.
 //!
 //! A simplistic way to describe how Retronym works is to say that it takes
-//! lists of numbers and pack them into data tables. A source code file is
+//! lists of numbers and packs them into data tables. A source code file is
 //! an implict data table and explicit list of values which to pack.
 
 use crate::node::Node;
 
-struct List<'token> {
+#[derive(Debug)]
+pub struct List<'token> {
     nodes: Vec<Node<'token>>,
 }
 
@@ -19,6 +20,21 @@ impl Default for List<'_> {
     /// Get a default list (no nodes).
     fn default() -> Self {
         Self { nodes: Vec::new() }
+    }
+}
+
+use std::fmt::{self, *};
+
+impl Display for List<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "(\n{}\n)",
+            self.nodes.iter().fold(String::new(), |acc, node| format!(
+                "{}{}, \n",
+                acc, node
+            ))
+        )
     }
 }
 
@@ -32,5 +48,11 @@ impl<'token> IntoIterator for &'token List<'token> {
     /// Get an iterator over the nodes in the list.
     fn into_iter(self) -> slice::Iter<'token, Node<'token>> {
         self.nodes.iter()
+    }
+}
+
+impl<'token> List<'token> {
+    pub fn push(&mut self, node: Node<'token>) {
+        self.nodes.push(node);
     }
 }
