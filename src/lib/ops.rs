@@ -56,25 +56,24 @@ impl Display for Operator {
     }
 }
 
-use crate::parser::pest::Rule;
-use crate::token::Token;
+use crate::token::{Token, TokenKind};
 
 impl From<&Token<'_>> for Operator {
     /// Convert a token into an `Operator` enum.
     /// Panics if using a token that is not an operator!
     fn from(token: &Token<'_>) -> Self {
-        match token.as_rule() {
-            Rule::op_add => Operator::Add,
-            Rule::op_sub => Operator::Sub,
-            Rule::op_mul => Operator::Mul,
-            Rule::op_div => Operator::Div,
-            Rule::op_mod => Operator::Mod,
-            Rule::op_pow => Operator::Pow,
-            Rule::op_xor => Operator::Xor,
-            Rule::op_and => Operator::And,
-            Rule::op_bor => Operator::Bor,
-            Rule::op_shl => Operator::Shl,
-            Rule::op_shr => Operator::Shr,
+        match token.kind() {
+            TokenKind::OpAdd => Operator::Add,
+            TokenKind::OpSub => Operator::Sub,
+            TokenKind::OpMul => Operator::Mul,
+            TokenKind::OpDiv => Operator::Div,
+            TokenKind::OpMod => Operator::Mod,
+            TokenKind::OpPow => Operator::Pow,
+            TokenKind::OpXor => Operator::Xor,
+            TokenKind::OpAnd => Operator::And,
+            TokenKind::OpBor => Operator::Bor,
+            TokenKind::OpShl => Operator::Shl,
+            TokenKind::OpShr => Operator::Shr,
             _ => panic!("Not an operator token!"),
         }
     }

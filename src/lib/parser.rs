@@ -21,11 +21,11 @@ use crate::node::{ASTResult, Node};
 //==============================================================================
 
 use crate::token::Token;
-use crate::tokeniter::TokenIter;
+use crate::tokenizer::Tokenizer;
 use std::iter::Peekable;
 
 pub struct Parser<'token> {
-    tokens: Peekable<TokenIter<'token>>,
+    tokens: Peekable<Tokenizer<'token>>,
 }
 
 impl<'token> Parser<'token> {
@@ -36,7 +36,7 @@ impl<'token> Parser<'token> {
     /// the RymParser does as well.
     pub fn from_str(source: &'token str) -> Self {
         Self {
-            tokens: TokenIter::from_str(source).unwrap().peekable(),
+            tokens: Tokenizer::from_str(source).unwrap().peekable(),
         }
     }
 

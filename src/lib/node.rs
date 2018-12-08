@@ -125,36 +125,35 @@ impl<'token> Node<'token> {
 
 //==============================================================================
 
-use crate::parser::pest::Rule;
-use crate::token::Token;
+use crate::token::{Token, TokenKind};
 use std::convert::From;
 
 impl<'token> From<Token<'token>> for Node<'token> {
     fn from(token: Token<'token>) -> Node<'_> {
         Node {
-            kind: match token.as_rule() {
+            kind: match token.kind() {
                 // parse an integer number:
-                Rule::int_number => NodeKind::Value(Value::Int(
+                TokenKind::Int => NodeKind::Value(Value::Int(
                     // parse the text as an integer number
                     token.as_str().parse::<i64>().unwrap(),
                 )),
                 // parse a hexadecimal number:
-                Rule::hex_number => NodeKind::Value(Value::Int(
+                TokenKind::Hex => NodeKind::Value(Value::Int(
                     // note that we have to drop the sigil. limitations in
                     // Pest make this difficult to do at the grammar level
                     i64::from_str_radix(&token.as_str()[1..], 16).unwrap(),
                 )),
                 // parse a binary number:
-                Rule::bin_number => NodeKind::Value(Value::Int(
+                TokenKind::Bin => NodeKind::Value(Value::Int(
                     i64::from_str_radix(&token.as_str()[1..], 2).unwrap(),
                 )),
                 // an atom is returned as a string
-                Rule::atom => NodeKind::Atom(
+                TokenKind::Atom => NodeKind::Atom(
                     //TODO: messy
                     token.as_str().to_string(),
                 ),
                 // a macro is returned as a string
-                Rule::mac => NodeKind::Macro(
+                TokenKind::Macro => NodeKind::Macro(
                     //TODO: messy
                     token.as_str().to_string(),
                 ),
@@ -163,13 +162,7 @@ impl<'token> From<Token<'token>> for Node<'token> {
                 ),
             },
             // is this a static (literal) value?
-            is_static: match token.as_rule() {
-                // numbers and strings need no dynamic calculation
-                Rule::int_number | Rule::hex_number | Rule::bin_number => true,
-                Rule::string => true,
-                // atoms & macros require name-resolution
-                _ => false,
-            },
+            is_static: token.is_literal(),
             // embed the original token with the source-code location.
             // this'll be used if we need to print an error message
             token: Some(token),

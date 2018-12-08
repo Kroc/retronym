@@ -20,4 +20,4 @@ pub mod ops;
 pub mod parser;
 pub mod segment;
 pub mod token;
-pub mod tokeniter;
+pub mod tokenizer;

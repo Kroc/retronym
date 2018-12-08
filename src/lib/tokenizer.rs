@@ -6,14 +6,14 @@ use crate::parser::pest::RymParser;
 use crate::token::Token;
 use pest::iterators::Pairs;
 
-pub struct TokenIter<'token> {
+pub struct Tokenizer<'token> {
     /// A Pest Pairs iterator which will yield each token from the source code.
     pairs: Pairs<'token, Rule>,
 }
 
 use std::convert::From;
 
-impl<'token> From<Pairs<'token, Rule>> for TokenIter<'token> {
+impl<'token> From<Pairs<'token, Rule>> for Tokenizer<'token> {
     /// Build a new token iterator from Pest's Pairs iterator.
     /// (the `parse` method will give you one of these)
     fn from(pairs: Pairs<'token, Rule>) -> Self {
@@ -25,7 +25,7 @@ use crate::error::ParseError;
 // required for the `parse` method of `RymParser` to be visible here.
 use pest::Parser;
 
-impl<'token> TokenIter<'token> {
+impl<'token> Tokenizer<'token> {
     // note that we cannot implement `FromStr` due to the lifetime requirement?
     #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &'token str) -> Result<Self, ParseError> {
@@ -36,11 +36,11 @@ impl<'token> TokenIter<'token> {
         );
 
         // convert the parse result into an wrapped iterator
-        Ok(TokenIter::from(parser))
+        Ok(Self::from(parser))
     }
 }
 
-impl<'token> Iterator for TokenIter<'token> {
+impl<'token> Iterator for Tokenizer<'token> {
     type Item = Token<'token>;
 
     fn next(&mut self) -> Option<Self::Item> {

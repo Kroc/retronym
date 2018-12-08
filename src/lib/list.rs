@@ -34,10 +34,3 @@ impl<'token> IntoIterator for &'token List<'token> {
         self.nodes.iter()
     }
 }
-
-impl List<'_> {
-    /// Begin a new List.
-    fn new() -> Self {
-        Self::default()
-    }
-}

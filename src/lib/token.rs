@@ -32,17 +32,65 @@ impl<'t> From<Pair<'t, Rule>> for Token<'t> {
     }
 }
 
+pub enum TokenKind {
+    KeywordAtom,
+    KeywordMacro,
+    Int,
+    Hex,
+    Bin,
+    Float,
+    Atom,
+    Macro,
+    String,
+    OpAdd,
+    OpSub,
+    OpMul,
+    OpDiv,
+    OpMod,
+    OpPow,
+    OpXor,
+    OpAnd,
+    OpBor,
+    OpShl,
+    OpShr,
+}
+
 impl<'t> Token<'t> {
-    // Our lexer/parser, Pest, generates an enum, `Rule`, from the original
-    // grammar file. This method returns the `Rule` discriminant for the
-    // matched production, for example: `Rule::expr` for expressions.
-    // See "retronym.pest" for the grammar and therefore the `Rule` names.
-    pub fn as_rule(&self) -> Rule {
+    /// Our lexer/parser, Pest, generates an enum, `Rule`, from the original
+    /// grammar file. This method returns the `Rule` discriminant for the
+    /// matched production, for example: `Rule::expr` for expressions.
+    /// See "retronym.pest" for the grammar and therefore the `Rule` names.
+    fn as_rule(&self) -> Rule {
         self.0
     }
 
     pub fn as_str(&self) -> &'t str {
         self.1.as_str()
+    }
+
+    pub fn kind(&self) -> TokenKind {
+        match self.as_rule() {
+            Rule::keyword_atom => TokenKind::KeywordAtom,
+            Rule::keyword_macro => TokenKind::KeywordMacro,
+            Rule::int_number => TokenKind::Int,
+            Rule::hex_number => TokenKind::Hex,
+            Rule::bin_number => TokenKind::Bin,
+            Rule::atom => TokenKind::Atom,
+            Rule::mac => TokenKind::Macro,
+            Rule::string => TokenKind::String,
+            Rule::op_add => TokenKind::OpAdd,
+            Rule::op_sub => TokenKind::OpSub,
+            Rule::op_mul => TokenKind::OpMul,
+            Rule::op_div => TokenKind::OpDiv,
+            Rule::op_mod => TokenKind::OpMod,
+            Rule::op_pow => TokenKind::OpPow,
+            Rule::op_xor => TokenKind::OpXor,
+            Rule::op_and => TokenKind::OpAnd,
+            Rule::op_bor => TokenKind::OpBor,
+            Rule::op_shl => TokenKind::OpShl,
+            Rule::op_shr => TokenKind::OpShr,
+            _ => unimplemented!(),
+        }
     }
 }
 
@@ -128,6 +176,16 @@ impl<'t> Token<'t> {
     pub fn is_value(&self) -> bool {
         match self.as_rule() {
             Rule::int_number | Rule::hex_number | Rule::bin_number => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_literal(&self) -> bool {
+        match self.as_rule() {
+            Rule::int_number
+            | Rule::hex_number
+            | Rule::bin_number
+            | Rule::string => true,
             _ => false,
         }
     }
