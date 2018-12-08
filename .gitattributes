@@ -1,0 +1,5 @@
+# use native line-endings
+* text=auto
+
+# RLS does not work with CRLF endings >:[
+*.rs text eol=lf

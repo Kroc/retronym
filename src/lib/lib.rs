@@ -28,7 +28,7 @@ pub mod tokenizer;
 use crate::object::Object;
 
 pub fn assemble_str(source: &str) {
-    let object = Object::new_from_str(source);
+    let mut object = Object::new_from_str(source);
 
     object.build();
 }

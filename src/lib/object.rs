@@ -10,11 +10,13 @@ use crate::table::Tables;
 
 pub struct Object<'token> {
     ast: AST<'token>,
-    _atoms: Atoms,
+    atoms: Atoms,
     _tables: Tables,
 }
 
 use crate::ast::AST;
+use crate::node::NodeKind;
+use crate::atom::Atom;
 
 impl<'token> Object<'token> {
     pub fn new_from_str(source: &'token str) -> Self {
@@ -43,16 +45,21 @@ impl<'token> Object<'token> {
 
         Self {
             ast: ast,
-            _atoms: Atoms::default(),
+            atoms: Atoms::default(),
             _tables: Tables::default(),
         }
     }
 
     //TODO: will need a better name / location for this
-    pub fn build(&self) {
+    pub fn build(&mut self) {
         // walk the AST nodes
         for n in self.ast.into_iter() {
-            println!(": {}", n);
+            match &n.kind {
+                NodeKind::DefAtom(atom) => {
+                    self.atoms.insert(atom.to_string(), Atom::new(atom));
+                }
+                _ => println!(": {}", n),
+            }
         }
     }
 }

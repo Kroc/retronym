@@ -6,7 +6,7 @@
 
 // An Atom definition. Not an Atom invocation instance -- these appear within
 // the AST -- but an Atom that an Object file defines and exports.
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Atom {
     /// The name/symol of the Atom.
     pub name: String,
@@ -33,10 +33,4 @@ impl Display for Atom {
 use std::collections::HashMap;
 
 /// A collection of defined Atoms. Object files will contain these for export.
-pub struct Atoms(HashMap<String, Atom>);
-
-impl Default for Atoms {
-    fn default() -> Self {
-        Atoms(HashMap::new())
-    }
-}
+pub type Atoms = HashMap<String, Atom>;

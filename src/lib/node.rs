@@ -26,7 +26,6 @@ pub struct Node<'token> {
 
 pub type MaybeNode<'token> = Option<Node<'token>>;
 
-use crate::atom::Atom;
 use crate::expr::Expr;
 use crate::list::List;
 
@@ -36,7 +35,7 @@ pub enum NodeKind<'token> {
     Void,
     /// An Atom definition. Defines a new Atom and exports it. When the final
     /// linking occurs, all atoms used must be defined.
-    DefAtom(Atom),
+    DefAtom(String),
     /// A list.
     List(Box<List<'token>>),
     /// An expression -- i.e. a calculation
@@ -121,7 +120,7 @@ impl<'token> Node<'token> {
     pub fn new_atom(atom: Token<'token>) -> Self {
         Self {
             // create the Atom and embed it in the node
-            kind: NodeKind::DefAtom(Atom::new(atom.as_str())),
+            kind: NodeKind::DefAtom(atom.to_string()),
             // store the reference back to the original source code;
             // this will be at the Atom name, not the "atom" keyword
             token: Some(atom),

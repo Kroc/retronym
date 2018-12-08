@@ -128,8 +128,8 @@ impl<'token> Parser<'token> {
         // is there any token following?
         match self.tokens.peek() {
             // is it an operator?
-            // yes: parse the operator and right-hand-side, passing in
-            // the left-hand value we already have
+            // yes: parse the operator and right-hand-side,
+            // passing in the left-hand value we already have
             Some(t) if t.is_oper() => self.parse_expr_inner(left),
             // no: this is a single value rather than an expression,
             // we can skip building an expression node and return
