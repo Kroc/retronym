@@ -75,7 +75,7 @@ impl<'token> Token<'token> {
             Rule::keyword_atom => TokenKind::KeywordAtom,
             Rule::keyword_macro => TokenKind::KeywordMacro,
             Rule::int_number => TokenKind::Int(
-                i64::from_str_radix(&self.as_str()[1..], 16).unwrap(),
+                i64::from_str_radix(&self.as_str(), 16).unwrap(),
             ),
             Rule::hex_number => TokenKind::Hex(
                 // note that we have to drop the sigil. limitations in

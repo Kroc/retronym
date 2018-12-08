@@ -91,7 +91,7 @@ impl<'token> Parser<'token> {
         if !token.is_keyword_atom() {
             return Ok(None);
         }
-        
+
         // "atom" keyword is present, skip over it
         let token = self.tokens.next().unwrap();
 
@@ -124,29 +124,23 @@ impl<'token> Parser<'token> {
         // first value that will form the inner-most (but also left-most)
         // value, e.g. the "1" in `(((1 + 2) + 3) + 4)`
         let left = Node::from(token);
-        let token = self.tokens.next().unwrap();
 
-        // is there any token following,
-        // is it an operator?
-        if !token.is_oper() {
+        // is there any token following?
+        match self.tokens.peek() {
+            // is it an operator?
+            // yes: parse the operator and right-hand-side, passing in
+            // the left-hand value we already have
+            Some(t) if t.is_oper() => self.parse_expr_inner(left),
             // no: this is a single value rather than an expression,
             // we can skip building an expression node and return
             // a value node instead
-            return ASTResult::from(left);
+            None | Some(_) => ASTResult::from(left),
         }
-
-        // parse the operator and right-hand-side, passing in
-        // the left-hand value we already have
-        self.parse_expr_inner(left, token)
     }
 
-    fn parse_expr_inner(
-        &mut self,
-        left: Node<'token>,
-        token: Token<'token>,
-    ) -> ASTResult<'token> {
+    fn parse_expr_inner(&mut self, left: Node<'token>) -> ASTResult<'token> {
         // save the operator, move to the next token
-        let oper = token;
+        let oper = self.tokens.next().unwrap();
         let token = self.tokens.next().unwrap();
 
         // is there a token at all, and is it also a valid expression value?
@@ -158,7 +152,7 @@ impl<'token> Parser<'token> {
 
         // get the right hand value
         let right = token;
-        let token = self.tokens.next().unwrap();
+        let token = self.tokens.peek().unwrap();
 
         //build our expression node:
         let expr = Node::new_expr(
@@ -176,7 +170,7 @@ impl<'token> Parser<'token> {
         if token.is_oper() {
             // the expression we have just assembled will now
             // form the left-hand-side for the outer expression
-            self.parse_expr_inner(expr, token)
+            self.parse_expr_inner(expr)
         } else {
             ASTResult::from(expr)
         }
