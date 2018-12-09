@@ -30,14 +30,26 @@ list            = _{ expr ~ ( ( "," | WHITESPACE+ ) ~ list )? }
 expr            = _{ value ~ ( operator ~ expr )? }
 
 value           = _{
-                    string
+                    type_
                 |   keyword
                 |   atom
-                |   mac
+                |   macro_
                 |   number
+                |   string
                 }
 
 //==============================================================================
+
+type_           = @{
+                    type_bool | type_nybl | type_byte |
+                    type_word | type_long | type_quad }
+
+type_bool        = { "bool" }
+type_nybl        = { "nybl" }
+type_byte        = { "byte" }
+type_word        = { "word" }
+type_long        = { "long" }
+type_quad        = { "quad" }
 
 keyword         = @{ keyword_atom | keyword_macro }
 
@@ -46,7 +58,7 @@ keyword_macro   = { "macro" }
 
 atom            = { ASCII_ALPHA_UPPER ~ ( ASCII_DIGIT | ASCII_ALPHA_UPPER )* }
 
-mac             = @{
+macro_          = @{
                     // cannot begin with a digit
                     ( ASCII_ALPHA_LOWER | "_" )
                     // underscores allowed, unlike Atoms

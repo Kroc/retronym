@@ -19,6 +19,7 @@ pub mod node;
 pub mod object;
 pub mod ops;
 pub mod parser;
+pub mod ptype;
 pub mod record;
 pub mod segment;
 pub mod table;

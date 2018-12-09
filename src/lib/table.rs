@@ -5,11 +5,11 @@
 
 use crate::record::Record;
 
-pub struct Table {
-    _records: Vec<Record>,
+pub struct Table<'token> {
+    _records: Vec<Record<'token>>,
 }
 
-impl Default for Table {
+impl Default for Table<'_> {
     fn default() -> Self {
         Self {
             _records: Vec::new(),
@@ -17,4 +17,4 @@ impl Default for Table {
     }
 }
 
-pub type Tables = Vec<Table>;
+pub type Tables<'token> = Vec<Table<'token>>;

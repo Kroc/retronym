@@ -11,12 +11,14 @@ use crate::table::Tables;
 pub struct Object<'token> {
     ast: AST<'token>,
     atoms: Atoms,
-    _tables: Tables,
+    _tables: Tables<'token>,
 }
 
 use crate::ast::AST;
-use crate::node::NodeKind;
 use crate::atom::Atom;
+use crate::node::NodeKind;
+use crate::record::Record;
+use crate::table::Table;
 
 impl<'token> Object<'token> {
     pub fn new_from_str(source: &'token str) -> Self {
@@ -30,6 +32,10 @@ impl<'token> Object<'token> {
         //
         // - modules! a file can import other modules, requiring these to be
         //   turned into Objects too. Handled by linker only?
+        //
+        // - macros *must* be expanded before packing -- we can't know how many
+        //   list items a macro generates; therefore object files are bound to
+        //   the specific choice of macros they import (modules?)
         //
         // - establish a default segment for relocating once the AST has been
         //   parsed into data tables
@@ -52,12 +58,20 @@ impl<'token> Object<'token> {
 
     //TODO: will need a better name / location for this
     pub fn build(&mut self) {
+        // create a data table to begin packing in
+        let _table = Table::default();
+
+        // create a first record to pack
+        let _record = Record::default();
+
         // walk the AST nodes
         for n in self.ast.into_iter() {
             match &n.kind {
+                // define an Atom
                 NodeKind::DefAtom(atom) => {
                     self.atoms.insert(atom.to_string(), Atom::new(atom));
                 }
+                NodeKind::Value(_) => _record.add_data(n),
                 _ => println!(": {}", n),
             }
         }

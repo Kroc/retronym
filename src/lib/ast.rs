@@ -1,10 +1,9 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-//! Source code in text is transformed into an Abstract Syntax Tree. This is a
-//! structure that does away with the text of the source code and turns it into
-//! discrete types that we can quickly recognise without having to read out
-//! words letter-by-letter any more.
+//! An **Abstract Syntax Tree** is a machine-understandable structure that does
+//! away with the text of the source code and turns it into discrete types that
+//! we can quickly recognise without having to read out words letter-by-letter.
 
 use crate::node::Node;
 use crate::list::List;

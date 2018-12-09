@@ -28,6 +28,7 @@ pub type MaybeNode<'token> = Option<Node<'token>>;
 
 use crate::expr::Expr;
 use crate::list::List;
+use crate::ptype::PType;
 
 #[derive(Debug)]
 pub enum NodeKind<'token> {
@@ -36,6 +37,8 @@ pub enum NodeKind<'token> {
     /// An Atom definition. Defines a new Atom and exports it. When the final
     /// linking occurs, all atoms used must be defined.
     DefAtom(String),
+    /// A primitive type.
+    Type(PType),
     /// A list.
     List(Box<List<'token>>),
     /// An expression -- i.e. a calculation
@@ -139,13 +142,14 @@ impl<'token> From<Token<'token>> for Node<'token> {
     fn from(token: Token<'token>) -> Node<'_> {
         Node {
             kind: match token.kind() {
+                TokenKind::Type(p) => NodeKind::Type(p),
                 TokenKind::Int(i) => NodeKind::Value(Value::Int(i)),
                 TokenKind::Hex(h) => NodeKind::Value(Value::UInt(h)),
                 TokenKind::Bin(b) => NodeKind::Value(Value::UInt(b)),
                 TokenKind::Atom(s) => NodeKind::Atom(s),
                 TokenKind::Macro(s) => NodeKind::Macro(s),
                 _ => panic!(
-                    "Not a `Token` that can be converted into an `Node`."
+                    "Not a `Token` that can be converted into a `Node`."
                 ),
             },
             // is this a static (literal) value?
@@ -168,6 +172,7 @@ impl Display for Node<'_> {
         match self.kind {
             NodeKind::Void => write!(f, "<VOID>"),
             NodeKind::DefAtom(ref a) => write!(f, "atom {}", a),
+            NodeKind::Type(ref p) => write!(f, "{}", p),
             NodeKind::List(ref l) => write!(f, "{}", l),
             NodeKind::Expr(ref x) => write!(f, "{}", x),
             NodeKind::Atom(ref a) => write!(f, "{}", a),

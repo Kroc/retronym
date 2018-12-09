@@ -32,26 +32,52 @@ impl<'t> From<Pair<'t, Rule>> for Token<'t> {
     }
 }
 
+use crate::ptype::PType;
+
+/// Describes the type of the token (and a parsed value, if possible),
+/// without having to expose the internal Pest Rule.
 pub enum TokenKind {
+    /// Token is the "atom" keyword.
     KeywordAtom,
+    /// Token is the "macro" keyword.
     KeywordMacro,
+    /// Token is a primitive type.
+    Type(PType),
+    /// Token is an integer literal.
     Int(i64),
+    /// Token is a hexadecimal literal.
     Hex(u64),
+    /// Token is a binary literal.
     Bin(u64),
+    /// Token is a floating-point literal.
     Float(f64),
+    /// Token is an atom symbol.
     Atom(String),
+    /// Token is a macro symbol.
     Macro(String),
+    /// Token is a string literal.
     String(String),
+    /// Token is the add "+" operator.
     OpAdd,
+    /// Token is the subtract "-" operator.
     OpSub,
+    /// Token is the multiply "*" operator.
     OpMul,
+    /// Token is the divide "/" operator.
     OpDiv,
+    /// Token is the modulo / remainder "//" operator.
     OpMod,
+    /// Token is the power / exponention "**" operator.
     OpPow,
+    /// Token is the binary xor "^" operator.
     OpXor,
+    /// Token is the binary and "&" operator.
     OpAnd,
+    /// Token is the binary or "|" operator.
     OpBor,
+    /// Token is the shift-left "<<" operator.
     OpShl,
+    /// Token is the shift-right ">>" operator.
     OpShr,
 }
 
@@ -72,30 +98,34 @@ impl<'token> Token<'token> {
 impl<'token> Token<'token> {
     pub fn kind(&self) -> TokenKind {
         match self.as_rule() {
+            // keywords:
             Rule::keyword_atom => TokenKind::KeywordAtom,
             Rule::keyword_macro => TokenKind::KeywordMacro,
-            Rule::int_number => TokenKind::Int(
-                i64::from_str_radix(&self.as_str(), 16).unwrap(),
-            ),
+            // primitive types:
+            Rule::type_bool => TokenKind::Type(PType::BOOL),
+            Rule::type_nybl => TokenKind::Type(PType::NYBL),
+            Rule::type_byte => TokenKind::Type(PType::BYTE),
+            Rule::type_word => TokenKind::Type(PType::WORD),
+            Rule::type_long => TokenKind::Type(PType::LONG),
+            Rule::type_quad => TokenKind::Type(PType::QUAD),
+            // literals:
+            Rule::int_number => {
+                TokenKind::Int(i64::from_str_radix(&self.as_str(), 16).unwrap())
+            }
             Rule::hex_number => TokenKind::Hex(
                 // note that we have to drop the sigil. limitations in
                 // Pest make this difficult to do at the grammar level
-                u64::from_str_radix(&self.as_str()[1..], 16).unwrap()
+                u64::from_str_radix(&self.as_str()[1..], 16).unwrap(),
             ),
             Rule::bin_number => TokenKind::Bin(
                 // note that we have to drop the sigil. limitations in
                 // Pest make this difficult to do at the grammar level
-                u64::from_str_radix(&self.as_str()[1..], 2).unwrap()
+                u64::from_str_radix(&self.as_str()[1..], 2).unwrap(),
             ),
-            Rule::atom => TokenKind::Atom(
-                self.as_str().to_string()
-            ),
-            Rule::mac => TokenKind::Macro(
-                self.as_str().to_string()
-            ),
-            Rule::string => TokenKind::String(
-                self.as_str().to_string()
-            ),
+            Rule::string => TokenKind::String(self.as_str().to_string()),
+            Rule::atom => TokenKind::Atom(self.as_str().to_string()),
+            Rule::macro_ => TokenKind::Macro(self.as_str().to_string()),
+            // operators:
             Rule::op_add => TokenKind::OpAdd,
             Rule::op_sub => TokenKind::OpSub,
             Rule::op_mul => TokenKind::OpMul,
@@ -107,7 +137,10 @@ impl<'token> Token<'token> {
             Rule::op_bor => TokenKind::OpBor,
             Rule::op_shl => TokenKind::OpShl,
             Rule::op_shr => TokenKind::OpShr,
-            _ => unimplemented!(),
+            // Pest rules that do not translate to tokens, e.g. `EOI`
+            _ => panic!(
+                "Token not of a type that could be translated to a TokenKind!"
+            ),
         }
     }
 }
@@ -121,7 +154,9 @@ impl<'token> Display for Token<'token> {
 }
 
 impl<'t> Token<'t> {
-    /// Is this a keyword?
+    /// Is this token a keyword? ("atom", "macro"). This doesn't include the
+    /// type-names ("byte", "word", "long" &c.) because those are recognised
+    /// separately and not bundled in with keywords.
     pub fn is_keyword(&self) -> bool {
         match self.as_rule() {
             Rule::keyword_atom | Rule::keyword_macro => true,
@@ -143,6 +178,19 @@ impl<'t> Token<'t> {
         }
     }
 
+    /// Is this token a type name?
+    pub fn is_type(&self) -> bool {
+        match self.as_rule() {
+            Rule::type_bool
+            | Rule::type_nybl
+            | Rule::type_byte
+            | Rule::type_word
+            | Rule::type_long
+            | Rule::type_quad => true,
+            _ => false,
+        }
+    }
+
     /// Is this an Atom?
     pub fn is_atom(&self) -> bool {
         match self.as_rule() {
@@ -154,7 +202,7 @@ impl<'t> Token<'t> {
     /// Is this a Macro?
     pub fn is_macro(&self) -> bool {
         match self.as_rule() {
-            Rule::mac => true,
+            Rule::macro_ => true,
             _ => false,
         }
     }

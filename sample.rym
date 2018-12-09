@@ -1,5 +1,13 @@
 ;comment
 
+atom    A
+atom    X
+atom    Y
+
+struct  %vector {
+
+}
+
     adc # $ff
     adc $ff
     adc $ff, x

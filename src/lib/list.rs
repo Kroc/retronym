@@ -1,8 +1,8 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-//! Lists are one of the fundamental types of Retronym. Source code consists
-//! almost entirely of implicit lists and their elements.
+//! **Lists** are one of the fundamental types of Retronym. Source code
+//! consists almost entirely of implicit lists and their elements.
 //!
 //! A simplistic way to describe how Retronym works is to say that it takes
 //! lists of numbers and packs them into data tables. A source code file is

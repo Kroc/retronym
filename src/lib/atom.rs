@@ -1,8 +1,8 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
-//! Unique symbols with no value. Used for machine registers, e.g.
-//! "A", "X", "HL" etc.
+//! **Atoms** are unique symbols with no value. Used for machine registers,
+//! e.g. "`A`", "`X`", "`HL`" etc.
 
 // An Atom definition. Not an Atom invocation instance -- these appear within
 // the AST -- but an Atom that an Object file defines and exports.
