@@ -63,17 +63,7 @@ impl From<&Token<'_>> for Operator {
     /// Panics if using a token that is not an operator!
     fn from(token: &Token<'_>) -> Self {
         match token.kind() {
-            TokenKind::OpAdd => Operator::Add,
-            TokenKind::OpSub => Operator::Sub,
-            TokenKind::OpMul => Operator::Mul,
-            TokenKind::OpDiv => Operator::Div,
-            TokenKind::OpMod => Operator::Mod,
-            TokenKind::OpPow => Operator::Pow,
-            TokenKind::OpXor => Operator::Xor,
-            TokenKind::OpAnd => Operator::And,
-            TokenKind::OpBor => Operator::Bor,
-            TokenKind::OpShl => Operator::Shl,
-            TokenKind::OpShr => Operator::Shr,
+            TokenKind::Operator(o) => o,
             _ => panic!("Not an operator token!"),
         }
     }

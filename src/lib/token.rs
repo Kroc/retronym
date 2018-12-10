@@ -33,6 +33,7 @@ impl<'t> From<Pair<'t, Rule>> for Token<'t> {
 }
 
 use crate::ptype::PType;
+use crate::ops::Operator;
 
 /// Describes the type of the token (and a parsed value, if possible),
 /// without having to expose the internal Pest Rule.
@@ -57,28 +58,8 @@ pub enum TokenKind {
     Macro(String),
     /// Token is a string literal.
     String(String),
-    /// Token is the add "+" operator.
-    OpAdd,
-    /// Token is the subtract "-" operator.
-    OpSub,
-    /// Token is the multiply "*" operator.
-    OpMul,
-    /// Token is the divide "/" operator.
-    OpDiv,
-    /// Token is the modulo / remainder "//" operator.
-    OpMod,
-    /// Token is the power / exponention "**" operator.
-    OpPow,
-    /// Token is the binary xor "^" operator.
-    OpXor,
-    /// Token is the binary and "&" operator.
-    OpAnd,
-    /// Token is the binary or "|" operator.
-    OpBor,
-    /// Token is the shift-left "<<" operator.
-    OpShl,
-    /// Token is the shift-right ">>" operator.
-    OpShr,
+    /// Token is an `Operator`.
+    Operator(Operator),
 }
 
 impl<'token> Token<'token> {
@@ -125,17 +106,17 @@ impl<'token> Token<'token> {
             Rule::atom => TokenKind::Atom(self.as_str().to_string()),
             Rule::macro_ => TokenKind::Macro(self.as_str().to_string()),
             // operators:
-            Rule::op_add => TokenKind::OpAdd,
-            Rule::op_sub => TokenKind::OpSub,
-            Rule::op_mul => TokenKind::OpMul,
-            Rule::op_div => TokenKind::OpDiv,
-            Rule::op_mod => TokenKind::OpMod,
-            Rule::op_pow => TokenKind::OpPow,
-            Rule::op_xor => TokenKind::OpXor,
-            Rule::op_and => TokenKind::OpAnd,
-            Rule::op_bor => TokenKind::OpBor,
-            Rule::op_shl => TokenKind::OpShl,
-            Rule::op_shr => TokenKind::OpShr,
+            Rule::op_add => TokenKind::Operator(Operator::Add),
+            Rule::op_sub => TokenKind::Operator(Operator::Sub),
+            Rule::op_mul => TokenKind::Operator(Operator::Mul),
+            Rule::op_div => TokenKind::Operator(Operator::Div),
+            Rule::op_mod => TokenKind::Operator(Operator::Mod),
+            Rule::op_pow => TokenKind::Operator(Operator::Pow),
+            Rule::op_xor => TokenKind::Operator(Operator::Xor),
+            Rule::op_and => TokenKind::Operator(Operator::And),
+            Rule::op_bor => TokenKind::Operator(Operator::Bor),
+            Rule::op_shl => TokenKind::Operator(Operator::Shl),
+            Rule::op_shr => TokenKind::Operator(Operator::Shr),
             // Pest rules that do not translate to tokens, e.g. `EOI`
             _ => panic!(
                 "Token not of a type that could be translated to a TokenKind!"
