@@ -27,10 +27,8 @@ pub mod table;
 pub mod token;
 pub mod tokenizer;
 
-use crate::object::Object;
+use crate::assembler::Assembler;
 
 pub fn assemble_str(source: &str) {
-    let mut object = Object::new_from_str(source);
-
-    object.build();
+    Assembler::assemble_str(source);
 }
