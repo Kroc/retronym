@@ -17,8 +17,6 @@ pub struct Object<'token> {
 use crate::ast::AST;
 use crate::atom::Atom;
 use crate::node::NodeKind;
-use crate::record::Record;
-use crate::table::Table;
 
 impl<'token> Object<'token> {
     pub fn new_from_str(source: &'token str) -> Self {
@@ -58,12 +56,6 @@ impl<'token> Object<'token> {
 
     //TODO: will need a better name / location for this
     pub fn build(&mut self) {
-        // create a data table to begin packing in
-        let _table = Table::default();
-
-        // create a first record to pack
-        let _record = Record::default();
-
         // walk the AST nodes
         for n in self.ast.into_iter() {
             match &n.kind {
@@ -71,7 +63,6 @@ impl<'token> Object<'token> {
                 NodeKind::DefAtom(atom) => {
                     self.atoms.insert(atom.to_string(), Atom::new(atom));
                 }
-                NodeKind::Value(_) => _record.add_data(n),
                 _ => println!(": {}", n),
             }
         }

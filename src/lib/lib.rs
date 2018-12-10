@@ -22,6 +22,7 @@ pub mod parser;
 pub mod ptype;
 pub mod record;
 pub mod segment;
+pub mod r#struct;
 pub mod table;
 pub mod token;
 pub mod tokenizer;
