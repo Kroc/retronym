@@ -57,12 +57,12 @@ pub enum NodeKind<'token> {
 #[derive(Debug)]
 pub enum Value {
     /// An integer literal value.
-    Int(i64),
+    Int(i32),
     /// An unsigned literal value as used by binary and hexadecimal
-    /// numbers to represent raw numbers up to 64-bits.
-    UInt(u64),
+    /// numbers to represent raw numbers up to 32-bits.
+    UInt(u32),
     /// A floating point literal value.
-    Float(f64),
+    Float(f32),
 }
 
 /// During building of the `AST`, the methods return either a new `Node` to

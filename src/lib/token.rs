@@ -44,13 +44,13 @@ pub enum TokenKind {
     /// Token is a primitive type.
     Type(PType),
     /// Token is an integer literal.
-    Int(i64),
+    Int(i32),
     /// Token is a hexadecimal literal.
-    Hex(u64),
+    Hex(u32),
     /// Token is a binary literal.
-    Bin(u64),
+    Bin(u32),
     /// Token is a floating-point literal.
-    Float(f64),
+    Float(f32),
     /// Token is an atom symbol.
     Atom(String),
     /// Token is a macro symbol.
@@ -107,20 +107,19 @@ impl<'token> Token<'token> {
             Rule::type_byte => TokenKind::Type(PType::BYTE),
             Rule::type_word => TokenKind::Type(PType::WORD),
             Rule::type_long => TokenKind::Type(PType::LONG),
-            Rule::type_quad => TokenKind::Type(PType::QUAD),
             // literals:
             Rule::int_number => {
-                TokenKind::Int(i64::from_str_radix(&self.as_str(), 16).unwrap())
+                TokenKind::Int(i32::from_str_radix(&self.as_str(), 16).unwrap())
             }
             Rule::hex_number => TokenKind::Hex(
                 // note that we have to drop the sigil. limitations in
                 // Pest make this difficult to do at the grammar level
-                u64::from_str_radix(&self.as_str()[1..], 16).unwrap(),
+                u32::from_str_radix(&self.as_str()[1..], 16).unwrap(),
             ),
             Rule::bin_number => TokenKind::Bin(
                 // note that we have to drop the sigil. limitations in
                 // Pest make this difficult to do at the grammar level
-                u64::from_str_radix(&self.as_str()[1..], 2).unwrap(),
+                u32::from_str_radix(&self.as_str()[1..], 2).unwrap(),
             ),
             Rule::string => TokenKind::String(self.as_str().to_string()),
             Rule::atom => TokenKind::Atom(self.as_str().to_string()),

@@ -79,14 +79,14 @@ text            = @{ ( !"\"" ~ ANY )* }
 
 int_number      = @{ "-"? ~ ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* }
 
-// a hexadecimal number uses a "$" sigil, followed by up to 32 hexadecimals
+// a hexadecimal number uses a "$" sigil, followed by up to 16 hexadecimals
 // TODO: some kind of separator for very large hex numbers?
 
-hex_number      = @{ "$" ~ ASCII_HEX_DIGIT{1,32} }
+hex_number      = @{ "$" ~ ASCII_HEX_DIGIT{1,16} }
 
-// a binary number uses a "%" sigil, followed by up to 64 binary decimals
+// a binary number uses a "%" sigil, followed by up to 32 binary decimals
 
-bin_number      = @{ "%" ~ ASCII_BIN_DIGIT{1,64} }
+bin_number      = @{ "%" ~ ASCII_BIN_DIGIT{1,32} }
 
 // this rule is silent as we will parse the specific type of number
 // (dec, bin, hex) rather than this top-level token

@@ -11,10 +11,9 @@
 //! * `byte` = 8 bits (1 byte)
 //! * `word` = 16 bits (2 bytes)
 //! * `long` = 32 bits (4 bytes)
-//! * `quad` = 64 bits (8 bytes)
 //! 
 //! Note that these are specified for the target-system (6502, Z80 etc.) and
-//! not Retronym's own internal calculations, which use 64-bit numbers and
+//! not Retronym's own internal calculations, which use 32-bit numbers and
 //! only constrain to lower sizes at the point of assembling binary output;
 //! that is, expressions can work with numbers larger than the chosen output
 //! type so long as the final result fits.
@@ -38,8 +37,6 @@ pub enum PType {
     /// or "double" in the past, not to be confused with the double-precision
     /// float.
     LONG = 32,
-    /// A quadruple-word (64-bits)
-    QUAD = 64,
 }
 
 use std::fmt::{self, *};
@@ -53,7 +50,6 @@ impl Display for PType {
             PType::BYTE => "byte",
             PType::WORD => "word",
             PType::LONG => "long",
-            PType::QUAD => "quad",
         })
     }
 }
