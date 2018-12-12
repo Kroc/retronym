@@ -14,12 +14,13 @@ pub mod ast;
 pub mod atom;
 pub mod error;
 pub mod expr;
+pub mod field;
 pub mod list;
 pub mod node;
 pub mod object;
 pub mod ops;
 pub mod parser;
-pub mod ptype;
+pub mod primitive;
 pub mod record;
 pub mod segment;
 pub mod r#struct;
@@ -30,5 +31,6 @@ pub mod tokenizer;
 use crate::assembler::Assembler;
 
 pub fn assemble_str(source: &str) {
+    //--------------------------------------------------------------------------
     Assembler::assemble_str(source);
 }

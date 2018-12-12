@@ -17,8 +17,10 @@ pub struct AST<'token> {
 }
 
 impl Default for AST<'_> {
+    //==========================================================================
     /// Gives you an empty AST structure.
     fn default() -> Self {
+        //----------------------------------------------------------------------
         AST { nodes: List::default() }
     }
 }
@@ -26,26 +28,28 @@ impl Default for AST<'_> {
 use std::slice;
 
 impl<'token> IntoIterator for &'token AST<'token> {
+    //==========================================================================
     type Item = &'token Node<'token>;
     type IntoIter = slice::Iter<'token, Node<'token>>;
 
     fn into_iter(self) -> slice::Iter<'token, Node<'token>> {
+        //----------------------------------------------------------------------
         self.nodes.into_iter()
     }
 }
 
-//==============================================================================
-
 use crate::parser::Parser;
 
 impl<'token> AST<'token> {
+    //==========================================================================
     pub fn new_from_str(source: &'token str) -> Self {
-        let p = Parser::from_str(source);
+        //----------------------------------------------------------------------
+        let parser = Parser::from_str(source);
 
         let mut ast = AST::default();
 
-        for n in p {
-            match n {
+        for node in parser {
+            match node {
                 Ok(o) => match o {
                     Some(a) => ast.push(a),
                     None => break,
@@ -62,6 +66,7 @@ impl<'token> AST<'token> {
     }
 
     fn push(&mut self, node: Node<'token>) {
+        //----------------------------------------------------------------------
         self.nodes.push(node);
     }
 }

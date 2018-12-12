@@ -5,24 +5,24 @@
 //!
 //! Retronym has a small number of built-in primitives,
 //! defined by the number of bits they occupy:
-//! 
+//!
 //! * `bool` = 1 bit
-//! * `nybl` (nybble) = 2 bits
+//! * `nybl` = 4 bits (a nybble)
 //! * `byte` = 8 bits (1 byte)
 //! * `word` = 16 bits (2 bytes)
 //! * `long` = 32 bits (4 bytes)
-//! 
+//!
 //! Note that these are specified for the target-system (6502, Z80 etc.) and
 //! not Retronym's own internal calculations, which use 32-bit numbers and
 //! only constrain to lower sizes at the point of assembling binary output;
 //! that is, expressions can work with numbers larger than the chosen output
 //! type so long as the final result fits.
-//! 
+//!
 
 /// Native, target-system, primitive types;
 /// described in number of bits.
 #[derive(Debug)]
-pub enum PType {
+pub enum Primitive {
     /// A single bit. Cannot be named `bit` due to conflict with the `bit`
     /// instruction on Z80 cpus.
     BOOL = 1,
@@ -41,15 +41,21 @@ pub enum PType {
 
 use std::fmt::{self, *};
 
-impl Display for PType {
+impl Display for Primitive {
+    //==========================================================================
     /// Give the normalised string representation of a primitive type.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", match self {
-            PType::BOOL => "bool",
-            PType::NYBL => "nybl",
-            PType::BYTE => "byte",
-            PType::WORD => "word",
-            PType::LONG => "long",
-        })
+        //----------------------------------------------------------------------
+        write!(
+            f,
+            "{}",
+            match self {
+                Primitive::BOOL => "bool",
+                Primitive::NYBL => "nybl",
+                Primitive::BYTE => "byte",
+                Primitive::WORD => "word",
+                Primitive::LONG => "long",
+            }
+        )
     }
 }

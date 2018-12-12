@@ -15,12 +15,6 @@ pub(crate) mod pest {
     pub struct RymParser;
 }
 
-use crate::error::*;
-use crate::node::{ASTResult, Node};
-
-//==============================================================================
-
-use crate::token::Token;
 use crate::tokenizer::Tokenizer;
 use std::iter::Peekable;
 
@@ -28,21 +22,35 @@ pub struct Parser<'token> {
     tokens: Peekable<Tokenizer<'token>>,
 }
 
+use crate::error::*;
+use crate::list::List;
+use crate::node::{ASTResult, Node};
+use crate::token::Token;
+
 impl<'token> Parser<'token> {
+    //==========================================================================
     // note that we cannot implement `FromStr` due to the lifetime requirement?
     #[allow(clippy::should_implement_trait)]
     /// NB: the string reference must live as long as the `RymParser`;
     /// that is, the source string you pass it will not deallocate until
     /// the RymParser does as well.
+    ///
     pub fn from_str(source: &'token str) -> Self {
+        //----------------------------------------------------------------------
         Self {
             tokens: Tokenizer::from_str(source).unwrap().peekable(),
         }
     }
 
+    /// A statement is one computable action.
+    ///
     fn parse_statement(&mut self, token: Token<'token>) -> ASTResult<'token> {
+        //----------------------------------------------------------------------
         if token.is_keyword() {
             return self.parse_keyword(token);
+        }
+        if token.is_type() {
+            return self.parse_record_type(token);
         }
         if token.is_macro() {
             return self.parse_macro(token);
@@ -53,20 +61,10 @@ impl<'token> Parser<'token> {
         Ok(None)
     }
 
-    /// Parse a macro invocation.
-    fn parse_macro(&mut self, token: Token<'token>) -> ASTResult<'token> {
-        // if the current token is not a macro,
-        // this is not our concern.
-        if !token.is_macro() {
-            return Ok(None);
-        }
-
-        // build a `Node` for a macro invocation
-        ASTResult::from(Node::from(token))
-    }
-
     /// Parse a keyword; for defining new Atoms and Macros.
+    ///
     fn parse_keyword(&mut self, token: Token<'token>) -> ASTResult<'token> {
+        //----------------------------------------------------------------------
         if !token.is_keyword() {
             return Ok(None);
         }
@@ -82,12 +80,52 @@ impl<'token> Parser<'token> {
         Ok(None)
     }
 
+    /// A record type is an ad-hoc structure, setting the layout
+    /// of data-packing for whatever data follows.
+    ///
+    fn parse_record_type(
+        &mut self,
+        mut token: Token<'token>,
+    ) -> ASTResult<'token> {
+        //----------------------------------------------------------------------
+        // if the current token is not a type,
+        // this is not our concern.
+        if !token.is_type() {
+            return Ok(None);
+        }
+
+        // start a new List of Nodes to hold the record type
+        let mut list = List::default();
+
+        // add contiguous types to the struct:
+        loop {
+            // add the type to the record structure
+            list.push(Node::from(token));
+            // peek at the next token
+            // TODO: specifically error on nested lists?
+            match self.tokens.peek() {
+                // if it's also a type, move to it and loop
+                Some(t) if t.is_type() => token = self.tokens.next().unwrap(),
+                // if it's not a type, or the file ends,
+                // stop building the list
+                None | Some(_) => break,
+            };
+        }
+
+        ASTResult::from(
+            // return an AST node containing the record-type
+            Node::new_record(list),
+        )
+    }
+
     /// Parse an Atom definition.
+    ///
     #[allow(clippy::needless_pass_by_value)]
     fn parse_keyword_atom(
         &mut self,
         token: Token<'token>,
     ) -> ASTResult<'token> {
+        //----------------------------------------------------------------------
         if !token.is_keyword_atom() {
             return Ok(None);
         }
@@ -105,6 +143,20 @@ impl<'token> Parser<'token> {
         ASTResult::from(Node::new_atom(token))
     }
 
+    /// Parse a macro invocation.
+    ///
+    fn parse_macro(&mut self, token: Token<'token>) -> ASTResult<'token> {
+        //----------------------------------------------------------------------
+        // if the current token is not a macro,
+        // this is not our concern.
+        if !token.is_macro() {
+            return Ok(None);
+        }
+
+        // build a `Node` for a macro invocation
+        ASTResult::from(Node::from(token))
+    }
+
     /// Parse an expression, returning an AST node
     /// representing that expression.
     ///
@@ -112,7 +164,9 @@ impl<'token> Parser<'token> {
     /// `None`; the caller can decide if this is unexpected or not; otherwise
     /// returns an `ASTResult` of either a `Node` of the expression, or the
     /// error encountered.
+    ///
     fn parse_expr(&mut self, token: Token<'token>) -> ASTResult<'token> {
+        //----------------------------------------------------------------------
         // if the current token is not a valid opening for an expression
         // (including if we've reached end-of-file), then return an
         // "unrecognised" state, the caller decides if this is unexpected.
@@ -139,6 +193,7 @@ impl<'token> Parser<'token> {
     }
 
     fn parse_expr_inner(&mut self, left: Node<'token>) -> ASTResult<'token> {
+        //----------------------------------------------------------------------
         // save the operator, move to the next token
         let oper = self.tokens.next().unwrap();
         let token = self.tokens.next().unwrap();
@@ -178,10 +233,14 @@ impl<'token> Parser<'token> {
 }
 
 impl<'token> Iterator for Parser<'token> {
+    //==========================================================================
     type Item = ASTResult<'token>;
 
-    /// When you turn the crank on the parser, it spits out AST nodes.
+    /// When you turn the crank on the parser,
+    /// it spits out AST nodes.
+    ///
     fn next(&mut self) -> Option<ASTResult<'token>> {
+        //----------------------------------------------------------------------
         // pull a token from the source code
         match self.tokens.next() {
             // if there are no more tokens,

@@ -8,8 +8,10 @@ pub struct Assembler {}
 use crate::ast::AST;
 
 impl Assembler {
+    //==========================================================================
     /// Assembles from a string source.
     pub fn assemble_str(source: &str) {
+        //----------------------------------------------------------------------
         // create an AST from the source code
         let ast = AST::new_from_str(source);
 
@@ -40,12 +42,6 @@ impl Assembler {
         // walk the AST nodes
         for n in ast.into_iter() {
             match &n.kind {
-                /*
-                // define an Atom
-                NodeKind::DefAtom(atom) => {
-                    self.atoms.insert(atom.to_string(), Atom::new(atom));
-                }
-                */
                 _ => println!(": {}", n),
             }
         }

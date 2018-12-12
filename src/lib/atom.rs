@@ -13,8 +13,10 @@ pub struct Atom {
 }
 
 impl Atom {
+    //==========================================================================
     /// Create a new Atom. Only the name is required.
     pub fn new(name: &str) -> Self {
+        //----------------------------------------------------------------------
         Self {
             name: name.to_string(),
         }
@@ -24,8 +26,10 @@ impl Atom {
 use std::fmt::{self, *};
 
 impl Display for Atom {
+    //==========================================================================
     /// Print the Atom's symbol.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
         write!(f, "{}", self.name)
     }
 }

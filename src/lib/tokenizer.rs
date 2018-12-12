@@ -14,9 +14,11 @@ pub struct Tokenizer<'token> {
 use std::convert::From;
 
 impl<'token> From<Pairs<'token, Rule>> for Tokenizer<'token> {
+    //==========================================================================
     /// Build a new token iterator from Pest's Pairs iterator.
     /// (the `parse` method will give you one of these)
     fn from(pairs: Pairs<'token, Rule>) -> Self {
+        //----------------------------------------------------------------------
         Self { pairs }
     }
 }
@@ -26,9 +28,11 @@ use crate::error::ParseError;
 use pest::Parser;
 
 impl<'token> Tokenizer<'token> {
+    //==========================================================================
     // note that we cannot implement `FromStr` due to the lifetime requirement?
     #[allow(clippy::should_implement_trait)]
     pub fn from_str(s: &'token str) -> Result<Self, ParseError> {
+        //----------------------------------------------------------------------
         // create a parser from the given source code
         let parser = RymParser::parse(Rule::rym, s).expect(
             // TODO: cast `PestError` to `ParseError`
@@ -41,9 +45,11 @@ impl<'token> Tokenizer<'token> {
 }
 
 impl<'token> Iterator for Tokenizer<'token> {
+    //==========================================================================
     type Item = Token<'token>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        //----------------------------------------------------------------------
         // get the next Pest Pair and return it as a Token
         // (we don't want to expose the Pair internals)
         self.pairs.next().map(Token::from)

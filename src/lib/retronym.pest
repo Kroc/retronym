@@ -12,6 +12,8 @@ eol             = _{ WHITESPACE? ~ NEWLINE }
 
 comment         = _{ ";" ~ ( !NEWLINE ~ ANY )* ~ NEWLINE }
 
+id              = @{ ( ASCII_ALPHA | "_" ) ~ ( ASCII_ALPHANUMERIC | "_" )* }
+
 // outline:
 //==============================================================================
 
@@ -21,9 +23,9 @@ root            = _{ WHITESPACE? ~ list }
 
 // almost everything in Retronym is an implicit list, commas are optional.
 // for example, strings are self-contained lists of bytes. because macros
-// consume all list elements between it and the next macro, we won't enforce
-// list validity strongly here; we'll only concern ourselves with the terminals
-// and let the parser do the actual validation.
+// consume list elements between it and the next macro, we won't enforce
+// list validity strongly here; we'll only concern ourselves with the
+// terminals and let the parser do the actual validation.
 
 list            = _{ expr ~ ( ( "," | WHITESPACE+ ) ~ list )? }
 
@@ -40,16 +42,18 @@ value           = _{
 
 //==============================================================================
 
-type_           = @{
+type_           = _{
+                    type_struct | 
                     type_bool | type_nybl | type_byte |
-                    type_word | type_long | type_quad }
+                    type_word | type_long }
 
-type_bool        = { "bool" }
-type_nybl        = { "nybl" }
-type_byte        = { "byte" }
-type_word        = { "word" }
-type_long        = { "long" }
-type_quad        = { "quad" }
+type_struct     = @{ "%" ~ id }
+
+type_bool       = { "bool" }
+type_nybl       = { "nybl" }
+type_byte       = { "byte" }
+type_word       = { "word" }
+type_long       = { "long" }
 
 keyword         = @{ keyword_atom | keyword_macro }
 

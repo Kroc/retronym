@@ -3,26 +3,19 @@
 
 //! Used-defined **structure** types.
 
+use crate::field::Field;
+
 #[derive(Debug)]
 pub struct Struct {
-    _fields: Vec<Field>,
-}
-
-use crate::ptype::PType;
-
-#[derive(Debug)]
-pub enum Field {
-    /// A native primitive type (on the target system),
-    /// e.g. `byte`, `word`, `long` &c.
-    Type(PType),
-    /// Inception.
-    Struct(Box<Struct>),
+    fields: Vec<Field>,
 }
 
 impl Default for Struct {
+    //==========================================================================
     fn default() -> Self {
+        //----------------------------------------------------------------------
         Self {
-            _fields: Vec::new(),
+            fields: Vec::new(),
         }
     }
 }
@@ -30,11 +23,13 @@ impl Default for Struct {
 use std::fmt::{self, *};
 
 impl Display for Struct {
+    //==========================================================================
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
         write!(
             f,
             "<{}>",
-            self._fields
+            self.fields
                 .iter()
                 .fold(String::new(), |acc, field| format!(
                     "{}{}, \n",
@@ -44,11 +39,12 @@ impl Display for Struct {
     }
 }
 
-impl Display for Field {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Field::Type(p) => write!(f, "{}", p),
-            Field::Struct(s) => write!(f, "{}", *s),
-        }
+impl Struct {
+    //==========================================================================
+    /// Add a `Field` to the `Struct`.
+    /// 
+    pub fn add_field(&mut self, field: Field) {
+        //----------------------------------------------------------------------
+        self.fields.push(field);
     }
 }

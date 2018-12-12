@@ -12,14 +12,14 @@ use crate::node::Node;
 
 #[derive(Debug)]
 pub struct List<'token> {
-    //==========================================================================
     nodes: Vec<Node<'token>>,
 }
 
 impl Default for List<'_> {
-    //--------------------------------------------------------------------------
+    //==========================================================================
     /// Get a default list (no nodes).
     fn default() -> Self {
+        //----------------------------------------------------------------------
         Self { nodes: Vec::new() }
     }
 }
@@ -27,14 +27,15 @@ impl Default for List<'_> {
 use std::fmt::{self, *};
 
 impl Display for List<'_> {
-    //--------------------------------------------------------------------------
+    //==========================================================================
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
         write!(
             f,
             //TODO: indent nesting?
-            "(\n{}\n)",
+            "(\n{})",
             self.nodes.iter().fold(String::new(), |acc, node| format!(
-                "{}{}, \n",
+                "{}\t{}, \n",
                 acc, node
             ))
         )
@@ -44,19 +45,21 @@ impl Display for List<'_> {
 use std::slice;
 
 impl<'token> IntoIterator for &'token List<'token> {
-    //--------------------------------------------------------------------------
+    //==========================================================================
     type Item = &'token Node<'token>;
     type IntoIter = slice::Iter<'token, Node<'token>>;
 
     /// Get an iterator over the nodes in the list.
     fn into_iter(self) -> slice::Iter<'token, Node<'token>> {
+        //----------------------------------------------------------------------
         self.nodes.iter()
     }
 }
 
 impl<'token> List<'token> {
-    //--------------------------------------------------------------------------
+    //==========================================================================
     pub fn push(&mut self, node: Node<'token>) {
+        //----------------------------------------------------------------------
         self.nodes.push(node);
     }
 }

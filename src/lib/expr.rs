@@ -13,11 +13,13 @@ pub struct Expr<'token> {
 }
 
 impl<'token> Expr<'token> {
+    //==========================================================================
     pub fn new(
         left: Node<'token>,
         oper: &Token<'token>,
         right: Node<'token>,
     ) -> Self {
+        //----------------------------------------------------------------------
         Self {
             // left hand side:
             left: left,
@@ -32,7 +34,9 @@ impl<'token> Expr<'token> {
 use std::fmt::{self, *};
 
 impl<'token> Display for Expr<'token> {
+    //==========================================================================
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
         // TODO: Operator to string
         write!(f, "({} {} {})", self.left, self.oper, self.right)
     }

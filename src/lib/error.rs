@@ -45,38 +45,46 @@ pub enum ParseErrorKind {
 
 /// A crate-private constructor for `ParseError`.
 pub(crate) fn parse_error(kind: ParseErrorKind) -> ParseError {
+    //--------------------------------------------------------------------------
     ParseError(Box::new(kind))
 }
 
 /// The `Result` type that includes `ParseError`
 pub type ParseResult<T> = result::Result<T, ParseError>;
 
+// "I AM ERROR!"
 impl ParseError {
+    //==========================================================================
     /// Create an `EndOfFile` error.
     #[allow(dead_code)]
     pub(crate) fn end_of_file() -> Self {
+        //----------------------------------------------------------------------
         ParseError(Box::new(ParseErrorKind::EndOfFile))
     }
 
     /// Create an `Unexpected` error.
     #[allow(dead_code)]
     pub(crate) fn unexpected() -> Self {
+        //----------------------------------------------------------------------
         ParseError(Box::new(ParseErrorKind::Unexpected))
     }
 
     /// Return the specific type of this error.
     pub fn kind(&self) -> &ParseErrorKind {
+        //----------------------------------------------------------------------
         // return the embedded error
         &self.0
     }
 
     /// Unwrap this error into its underlying type.
     pub fn into_kind(self) -> ParseErrorKind {
+        //----------------------------------------------------------------------
         // dereference the embedded error
         *self.0
     }
 
     pub fn is_endoffile(&self) -> bool {
+        //----------------------------------------------------------------------
         match *self.0 {
             ParseErrorKind::EndOfFile => true,
             _ => false,
@@ -88,6 +96,7 @@ impl ParseError {
     /// If this is true, the underlying `ParseErrorKind`
     /// is guaranteed to be `ParseErrorKind::Io`.
     pub fn is_io_error(&self) -> bool {
+        //----------------------------------------------------------------------
         match *self.0 {
             ParseErrorKind::Io(_) => true,
             _ => false,
@@ -97,7 +106,9 @@ impl ParseError {
 
 // "I'm a real boy!"
 impl StdError for ParseError {
+    //==========================================================================
     fn description(&self) -> &str {
+        //----------------------------------------------------------------------
         match *self.0 {
             ParseErrorKind::Unimplemented => "Unimplemented",
             ParseErrorKind::EndOfFile => "End Of File",
@@ -109,6 +120,7 @@ impl StdError for ParseError {
     }
 
     fn cause(&self) -> Option<&dyn StdError> {
+        //----------------------------------------------------------------------
         match *self.0 {
             ParseErrorKind::Unimplemented => None,
             ParseErrorKind::EndOfFile => None,
@@ -121,7 +133,9 @@ impl StdError for ParseError {
 }
 
 impl fmt::Display for ParseError {
+    //==========================================================================
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
         match *self.0 {
             ParseErrorKind::Unimplemented => write!(f, "Unimplemented"),
             ParseErrorKind::EndOfFile => write!(f, "End Of File"),
@@ -134,18 +148,24 @@ impl fmt::Display for ParseError {
 }
 
 impl From<io::Error> for ParseError {
+    //==========================================================================
     fn from(err: io::Error) -> ParseError {
+        //----------------------------------------------------------------------
         parse_error(ParseErrorKind::Io(err))
     }
 }
 impl From<ParseError> for io::Error {
+    //==========================================================================
     fn from(err: ParseError) -> io::Error {
+        //----------------------------------------------------------------------
         io::Error::new(io::ErrorKind::Other, err)
     }
 }
 
 impl From<StdParseIntError> for ParseError {
+    //==========================================================================
     fn from(err: StdParseIntError) -> ParseError {
+        //----------------------------------------------------------------------
         parse_error(ParseErrorKind::ParseInt(err))
     }
 }

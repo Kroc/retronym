@@ -32,10 +32,12 @@ pub enum Operator {
 use std::fmt::{self, *};
 
 impl Display for Operator {
+    //==========================================================================
     /// Print the operators. These could be referenced from the source code
     /// so that we don't duplicate these strings with the Pest grammar, but
     /// I don't want to entangle the Pest lifetimes too broadly or deeply.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
         write!(
             f,
             "{}",
@@ -59,9 +61,11 @@ impl Display for Operator {
 use crate::token::{Token, TokenKind};
 
 impl From<&Token<'_>> for Operator {
+    //==========================================================================
     /// Convert a token into an `Operator` enum.
     /// Panics if using a token that is not an operator!
     fn from(token: &Token<'_>) -> Self {
+        //----------------------------------------------------------------------
         match token.kind() {
             TokenKind::Operator(o) => o,
             _ => panic!("Not an operator token!"),
