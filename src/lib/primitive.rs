@@ -21,7 +21,7 @@
 
 /// Native, target-system, primitive types;
 /// described in number of bits.
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy)]
 pub enum Primitive {
     /// A single bit. Cannot be named `bit` due to conflict with the `bit`
     /// instruction on Z80 cpus.

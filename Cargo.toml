@@ -16,6 +16,7 @@ license = "BSD-2-Clause"
 [dependencies]
 pest = "2.0.2"
 pest_derive = "2.0.1"
+itertools = "0.8.0"
 
 [[bin]]
 name = "retronym"

@@ -12,17 +12,9 @@ use crate::list::List;
 /// some source code. Because AST nodes can contain a reference back to the
 /// original source code (token) for errors, the `'token` lifetime is used
 /// so that the source code is not deallocated before the AST.
+#[derive(Default)]
 pub struct AST<'token> {
     nodes: List<'token>,
-}
-
-impl Default for AST<'_> {
-    //==========================================================================
-    /// Gives you an empty AST structure.
-    fn default() -> Self {
-        //----------------------------------------------------------------------
-        AST { nodes: List::default() }
-    }
 }
 
 use std::slice;

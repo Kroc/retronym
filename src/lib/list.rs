@@ -13,14 +13,19 @@ use crate::node::Node;
 #[derive(Debug)]
 pub struct List<'token> {
     nodes: Vec<Node<'token>>,
+    is_static: bool,
 }
 
 impl Default for List<'_> {
     //==========================================================================
     /// Get a default list (no nodes).
+    /// 
     fn default() -> Self {
         //----------------------------------------------------------------------
-        Self { nodes: Vec::new() }
+        Self {
+            nodes: Vec::new(),
+            is_static: true,
+        }
     }
 }
 
@@ -50,6 +55,7 @@ impl<'token> IntoIterator for &'token List<'token> {
     type IntoIter = slice::Iter<'token, Node<'token>>;
 
     /// Get an iterator over the nodes in the list.
+    ///
     fn into_iter(self) -> slice::Iter<'token, Node<'token>> {
         //----------------------------------------------------------------------
         self.nodes.iter()
@@ -60,6 +66,20 @@ impl<'token> List<'token> {
     //==========================================================================
     pub fn push(&mut self, node: Node<'token>) {
         //----------------------------------------------------------------------
+        // if a node is added that is not static, then the whole list is now
+        // considered non static.
+        if !node.is_static {
+            self.is_static = false;
+        }
+        // add the given node to the list
         self.nodes.push(node);
+    }
+
+    /// Does this list contain only static nodes? A static node is one that
+    /// does not require external information to compute a value.
+    ///
+    pub fn is_static(&self) -> bool {
+        //----------------------------------------------------------------------
+        self.is_static
     }
 }

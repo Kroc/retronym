@@ -56,6 +56,7 @@ pub type ParseResult<T> = result::Result<T, ParseError>;
 impl ParseError {
     //==========================================================================
     /// Create an `EndOfFile` error.
+    ///
     #[allow(dead_code)]
     pub(crate) fn end_of_file() -> Self {
         //----------------------------------------------------------------------
@@ -63,6 +64,7 @@ impl ParseError {
     }
 
     /// Create an `Unexpected` error.
+    ///
     #[allow(dead_code)]
     pub(crate) fn unexpected() -> Self {
         //----------------------------------------------------------------------
@@ -70,6 +72,7 @@ impl ParseError {
     }
 
     /// Return the specific type of this error.
+    ///
     pub fn kind(&self) -> &ParseErrorKind {
         //----------------------------------------------------------------------
         // return the embedded error
@@ -77,6 +80,7 @@ impl ParseError {
     }
 
     /// Unwrap this error into its underlying type.
+    ///
     pub fn into_kind(self) -> ParseErrorKind {
         //----------------------------------------------------------------------
         // dereference the embedded error
@@ -95,6 +99,7 @@ impl ParseError {
     ///
     /// If this is true, the underlying `ParseErrorKind`
     /// is guaranteed to be `ParseErrorKind::Io`.
+    ///
     pub fn is_io_error(&self) -> bool {
         //----------------------------------------------------------------------
         match *self.0 {

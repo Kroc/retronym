@@ -21,7 +21,7 @@ pub mod object;
 pub mod ops;
 pub mod parser;
 pub mod primitive;
-pub mod record;
+pub mod row;
 pub mod segment;
 pub mod r#struct;
 pub mod table;

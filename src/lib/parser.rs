@@ -74,15 +74,18 @@ impl<'token> Parser<'token> {
             return self.parse_keyword_atom(token);
         }
         if token.is_keyword_macro() {
-            return Ok(None);
+            unimplemented!();
         }
 
         Ok(None)
     }
 
-    /// A record type is an ad-hoc structure, setting the layout
-    /// of data-packing for whatever data follows.
-    ///
+    /// A record type is an ad-hoc structure, setting the layout of
+    /// data-packing for whatever data follows. When building an AST, nested
+    /// structure names (e.g. "%vector", cannot be resovled yet (they might
+    /// be defined in other modules) so we build a `List`. The assembly
+    /// process transforms this list into a true struct, ensuring that any
+    /// nested structs are resolved.
     fn parse_record_type(
         &mut self,
         mut token: Token<'token>,

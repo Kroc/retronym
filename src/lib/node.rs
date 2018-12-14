@@ -161,6 +161,63 @@ impl<'token> Node<'token> {
             is_static: false,
         }
     }
+
+    /// Does this Node contain data? That is, a literal value, expression
+    /// or a symbol that can be resolved into a value.
+    /// 
+    pub fn is_data(&self) -> bool {
+        //----------------------------------------------------------------------
+        match self.kind {
+            NodeKind::Value(_)
+            | NodeKind::Expr(_)
+            | NodeKind::Str(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Is this Node a Record?
+    /// 
+    /// The AST only stores Records as a `List` because any struct-nesting
+    /// can not be resolved until all structs are defined and these might
+    /// be in other modules.
+    /// 
+    pub fn is_record(&self) -> bool {
+        //----------------------------------------------------------------------
+        match self.kind {
+            NodeKind::Record(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Is this Node an Atom definition?
+    ///
+    pub fn is_atom_def(&self) -> bool {
+        //----------------------------------------------------------------------
+        match self.kind {
+            NodeKind::DefAtom(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Is this Node an Atom reference?
+    /// 
+    pub fn is_atom(&self) -> bool {
+        //----------------------------------------------------------------------
+        match self.kind {
+            NodeKind::Atom(_) => true,
+            _ => false,
+        }
+    }
+
+    /// Is this Node a Macro invocation?
+    /// 
+    pub fn is_macro(&self) -> bool {
+        //----------------------------------------------------------------------
+        match self.kind {
+            NodeKind::Macro(_) => true,
+            _ => false,
+        }
+    }
 }
 
 //==============================================================================
