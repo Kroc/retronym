@@ -69,7 +69,7 @@ impl<'token> Assembler<'token> {
 
         // create the initial data table,
         // and apply the record-type to it
-        let mut table = Table::from(record);
+        let mut table = Table::from(&record);
 
         // TODO: macro expansion pass? we still need to think about how macros
         // will consume elements ahead of themselves

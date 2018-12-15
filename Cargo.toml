@@ -35,6 +35,10 @@ test = false
 bench = false
 
 [profile.release]
+# disable debug-symbols and do not include any panic-unwinding code
 panic = 'abort'
+# compile and link as one whole object; this slows down compiling drastically,
+# but allows for tighter inter-function optimisations across the whole exe
+codegen-units = 1
+# Link-Time Optimization
 lto = true
-opt-level = 3

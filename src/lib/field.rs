@@ -53,3 +53,14 @@ impl From<Primitive> for Field<'_> {
         }
     }
 }
+
+impl Field<'_> {
+    //==========================================================================
+    pub fn cols(&self) -> usize {
+        //----------------------------------------------------------------------
+        match &self.kind {
+            FieldKind::Primitive(_) => 1,
+            FieldKind::Struct(s) => s.cols(),
+        }
+    }
+}

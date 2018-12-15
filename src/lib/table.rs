@@ -8,9 +8,10 @@ use crate::node::Node;
 use crate::r#struct::Struct;
 use crate::row::Row;
 
-#[derive(Default)]
 pub struct Table<'token> {
-    record: Struct<'token>,
+    /// Reference to the Record-struct used to define the columns.
+    record: &'token Struct<'token>,
+    /// The collection of Rows containing the data.
     rows: Vec<Row<'token>>,
     /// Current row being packed.
     row: Row<'token>,
@@ -18,27 +19,38 @@ pub struct Table<'token> {
 
 use std::convert::From;
 
-impl<'token> From<Struct<'token>> for Table<'token> {
+impl<'token> From<&'token Struct<'token>> for Table<'token> {
     //==========================================================================
-    fn from(record: Struct<'token>) -> Self {
+    /// Tables are tightly bound to the Record-struct that defines the type of
+    /// each column. You cannot create a Table without a Record-struct as this
+    /// would allow swapping the Record-struct whilst the Table is using it.
+    /// 
+    fn from(record: &'token Struct<'token>) -> Self {
         //----------------------------------------------------------------------
         Self {
             record: record,
-            // start with a 256-element buffer
-            rows: Vec::with_capacity(256),
-            // use the default structure to populate the rest
-            ..Default::default()
+            rows: Vec::new(),
+            row: Row::from(record),
         }
     }
 }
 
 impl<'token> Table<'token> {
     //==========================================================================
+    /// Add data to the Table by assigning an AST Node to the next cell in the
+    /// current row. When the record is satsisfied, another row will be started.
+    ///
+    /// TODO: return satisfied state, exports?
+    /// TODO: handle being passed a list (flatten it out?)
+    /// TODO: errors for non-data types of nodes
+    /// 
     pub fn add_data(&mut self, node: &'token Node<'token>) {
+        //----------------------------------------------------------------------
         self.row.add_data(node);
     }
 
     pub fn end(&mut self) {
+        //----------------------------------------------------------------------
         self.rows.push(self.row.clone());
         self.row.clear();
     }
