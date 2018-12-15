@@ -6,7 +6,7 @@
 
 use crate::node::Node;
 use crate::r#struct::Struct;
-use crate::row::Row;
+use crate::row::{RowBuilder,Row};
 
 pub struct Table<'token> {
     /// Reference to the Record-struct used to define the columns.
@@ -14,7 +14,7 @@ pub struct Table<'token> {
     /// The collection of Rows containing the data.
     rows: Vec<Row<'token>>,
     /// Current row being packed.
-    row: Row<'token>,
+    builder: RowBuilder<'token>,
 }
 
 use std::convert::From;
@@ -30,7 +30,7 @@ impl<'token> From<&'token Struct<'token>> for Table<'token> {
         Self {
             record: record,
             rows: Vec::new(),
-            row: Row::from(record),
+            builder: RowBuilder::new(record),
         }
     }
 }
@@ -46,13 +46,15 @@ impl<'token> Table<'token> {
     /// 
     pub fn add_data(&mut self, node: &'token Node<'token>) {
         //----------------------------------------------------------------------
-        self.row.add_data(node);
+        self.builder.add_data(node);
     }
 
-    pub fn end(&mut self) {
+    pub fn finish(&mut self) {
         //----------------------------------------------------------------------
-        self.rows.push(self.row.clone());
-        self.row.clear();
+        let row = self.builder.finish();
+        self.rows.push(row);
+        self.builder = RowBuilder::new(self.record);
+        //self
     }
 }
 

@@ -5,6 +5,18 @@
 
 use crate::field::Field;
 
+/// A Struct is a user-defined structure in Retronym, consisting of a
+/// list of types (`Primitive`s / other `Struct`s).
+/// 
+/// ## Examples ##
+/// 
+/// The example below defines a new struct named "point" containing two
+/// fields, each a byte wide.
+/// 
+/// ```
+/// %point  byte, byte
+/// ```
+/// 
 #[derive(Debug, Default)]
 pub struct Struct<'token> {
     fields: Vec<Field<'token>>,
@@ -25,6 +37,21 @@ impl Display for Struct<'_> {
         //----------------------------------------------------------------------
         // IterTools' `join` makes this sane
         f.write_str(&self.fields.iter().join(", "))
+    }
+}
+
+use std::slice;
+
+impl<'token> IntoIterator for &'token Struct<'token> {
+    //==========================================================================
+    type Item = &'token Field<'token>;
+    type IntoIter = slice::Iter<'token, Field<'token>>;
+
+    /// We only ever return references from iterating a Struct.
+    /// 
+    fn into_iter(self) -> slice::Iter<'token, Field<'token>> {
+        //----------------------------------------------------------------------
+        self.fields.iter()
     }
 }
 

@@ -78,16 +78,16 @@ impl<'token> Assembler<'token> {
         for n in ast.into_iter() {
             match () {
                 // define a new atom:
-                _ if n.is_atom_def() => object.new_atom(n),
+                _ if n.is_atom_def() => {object.new_atom(n);},
                 // TODO: a record-list needs to be compiled into a record-type
                 // data to be packed:
-                _ if n.is_data() => table.add_data(n),
+                _ if n.is_data() => {table.add_data(n);},
                 // unhandled!
                 _ => println!(": {}", n),
-            }
+            };
         }
 
-        table.end();
+        table.finish();
 
         println!("{}", table);
     }
