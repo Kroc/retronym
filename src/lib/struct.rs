@@ -31,7 +31,7 @@ impl Display for Struct<'_> {
 impl<'token> Struct<'token> {
     //==========================================================================
     /// The width of the struct, in bytes.
-    /// 
+    ///
     pub fn stride(&self) -> usize {
         //----------------------------------------------------------------------
         self.stride
@@ -39,7 +39,7 @@ impl<'token> Struct<'token> {
 
     /// Number of columns in the Struct
     /// (inlcuding nested Structs).
-    /// 
+    ///
     pub fn cols(&self) -> usize {
         //----------------------------------------------------------------------
         self.cols
@@ -57,5 +57,12 @@ impl<'token> Struct<'token> {
         };
         self.cols += field.cols();
         self.fields.push(field);
+    }
+
+    /// Get a Field from the Struct.
+    ///
+    pub fn field(&'token self, index: usize) -> &'token Field<'token> {
+        //----------------------------------------------------------------------
+        &self.fields[index]
     }
 }

@@ -12,6 +12,7 @@ extern crate pest_derive;
 pub mod assembler;
 pub mod ast;
 pub mod atom;
+pub mod cell;
 pub mod error;
 pub mod expr;
 pub mod field;

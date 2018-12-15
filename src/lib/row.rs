@@ -3,6 +3,7 @@
 
 //! One line of a **Table**.
 
+use crate::cell::Cell;
 use crate::node::Node;
 use crate::r#struct::Struct;
 
@@ -12,7 +13,7 @@ pub struct Row<'token> {
     /// The record structure to map the rows to.
     record: &'token Struct<'token>,
     /// Table cells in the Row.
-    cells: Vec<&'token Node<'token>>,
+    cells: Vec<Cell<'token>>,
     // Current column index in the Row; once the row is satisified,
     // no more data can be added.
     col: usize,
@@ -42,7 +43,7 @@ impl<'token> Row<'token> {
     ///
     pub fn add_data(&mut self, node: &'token Node<'token>) {
         //----------------------------------------------------------------------
-        self.cells.push(node);
+        self.cells.push(Cell::new(node, self.record.field(0)));
 
         self.col += 1;
     }
