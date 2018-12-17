@@ -5,19 +5,17 @@ use crate::primitive::Primitive;
 use crate::r#struct::Struct;
 use crate::token::Token;
 
-#[derive(Debug)]
 pub struct Field<'token> {
     /// Provide a reference back to the source code where the field was
     /// defined, for error messages when a value does not fit into a field.
-    token: Option<Token<'token>>,
-    /// The data-type of the field, which can be a nested struct.
-    pub kind: FieldKind<'token>,
+    _token: Option<Token<'token>>,
     /// Width, **in bits**, of the field. Bit-fields are possible,
     /// but structs are aligned to the byte.
-    pub bits: usize,
+    bits: usize,
+    /// The data-type of the field, which can be a nested struct.
+    pub kind: FieldKind<'token>,
 }
 
-#[derive(Debug)]
 pub enum FieldKind<'token> {
     /// A native primitive type (on the target system),
     /// e.g. `byte`, `word`, `long` &c.
@@ -26,16 +24,43 @@ pub enum FieldKind<'token> {
     Struct(Box<Struct<'token>>),
 }
 
+impl<'token> Display for FieldKind<'token> {
+    //==========================================================================
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
+        match self {
+            FieldKind::Primitive(p) => f.write_str(&p.to_string()),
+            FieldKind::Struct(s) => write!(f, "{}", *s),
+        }
+    }
+}
+
+impl<'token> Debug for FieldKind<'token> {
+    //==========================================================================
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
+        match self {
+            FieldKind::Primitive(p) => f.write_str(&p.to_string()),
+            FieldKind::Struct(s) => write!(f, "{:?}", *s),
+        }
+    }
+}
+
 use std::fmt::{self, *};
 
 impl<'token> Display for Field<'token> {
     //==========================================================================
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------
-        match &self.kind {
-            FieldKind::Primitive(p) => write!(f, "{}", p),
-            FieldKind::Struct(s) => write!(f, "{}", *s),
-        }
+        f.write_str(&self.kind.to_string())
+    }
+}
+
+impl<'token> Debug for Field<'token> {
+    //==========================================================================
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
+        write!(f, "{:?}", self.kind)
     }
 }
 
@@ -46,7 +71,7 @@ impl From<Primitive> for Field<'_> {
     fn from(primitive: Primitive) -> Self {
         //----------------------------------------------------------------------
         Self {
-            token: None,
+            _token: None,
             kind: FieldKind::Primitive(primitive),
             /// the Primitive enum equals the number of bits.
             bits: primitive as usize,
@@ -62,5 +87,10 @@ impl Field<'_> {
             FieldKind::Primitive(_) => 1,
             FieldKind::Struct(s) => s.cols(),
         }
+    }
+
+    pub fn bits(&self) -> usize {
+        //----------------------------------------------------------------------
+        self.bits
     }
 }

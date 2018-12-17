@@ -11,7 +11,7 @@ use crate::token::Token;
 #[derive(Debug, Clone)]
 pub struct Atom<'token> {
     /// The name/symol of the Atom.
-    pub name: String,
+    name: String,
     /// A reference back to the original source code where the atom was
     /// defined, in case of error.
     token: Token<'token>,
@@ -25,7 +25,7 @@ impl Display for Atom<'_> {
     ///
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------
-        write!(f, "{}", self.name)
+        f.write_str(&self.name)
     }
 }
 
@@ -55,7 +55,7 @@ impl<'token> From<&'token Node<'token>> for Atom<'token> {
     //==========================================================================
     /// Create an `Atom` from an AST `Node`. See the description for
     /// `From<Token> for Atom` for details, this method just passes
-    /// the Node's internal token along. 
+    /// the Node's internal token along.
     ///
     fn from(node: &'token Node<'token>) -> Self {
         //----------------------------------------------------------------------

@@ -17,7 +17,7 @@ use crate::field::Field;
 /// %point  byte, byte
 /// ```
 /// 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Struct<'token> {
     fields: Vec<Field<'token>>,
     /// Width, in bytes, of the structure. Not public as this value is
@@ -32,6 +32,15 @@ use itertools::Itertools;
 use std::fmt::{self, *};
 
 impl Display for Struct<'_> {
+    //==========================================================================
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
+        // IterTools' `join` makes this sane
+        f.write_str(&self.fields.iter().join(", "))
+    }
+}
+
+impl Debug for Struct<'_> {
     //==========================================================================
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------
@@ -77,7 +86,7 @@ impl<'token> Struct<'token> {
     pub fn add_field(&mut self, field: Field<'token>) {
         //----------------------------------------------------------------------
         // how many bytes does this add to the stride?
-        self.stride += match field.bits {
+        self.stride += match field.bits() {
             // TODO: bit-packing!
             1 | 4 => 1,
             n => n,

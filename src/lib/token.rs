@@ -14,7 +14,7 @@ use pest::Span;
 /// implement our own functions on top of Pest's `Pair` as it's from an
 /// external crate. We wrap the minimum amount of the interface for our
 /// purposes.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Token<'token>(Rule, Span<'token>);
 
 /// A list of tokens.
@@ -86,10 +86,7 @@ impl<'token> Token<'token> {
         //----------------------------------------------------------------------
         self.1.as_str()
     }
-}
 
-impl<'token> Token<'token> {
-    //==========================================================================
     pub fn kind(&self) -> TokenKind {
         //----------------------------------------------------------------------
         match self.as_rule() {
@@ -144,6 +141,14 @@ impl<'token> Token<'token> {
 use std::fmt::{self, *};
 
 impl<'token> Display for Token<'token> {
+    //==========================================================================
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
+        write!(f, "{}", self.as_str())
+    }
+}
+
+impl<'token> Debug for Token<'token> {
     //==========================================================================
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------

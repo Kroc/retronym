@@ -26,6 +26,11 @@ pub enum ParseErrorKind {
 
     Unexpected,
 
+    /// Cannot add any more data to a Table Row when it is already full.
+    RowSatisfied,
+    /// Cannot leave a record unsatisfied.
+    Unsatisfied,
+
     #[doc(hidden)]
     Unimplemented,
 
@@ -118,6 +123,8 @@ impl StdError for ParseError {
             ParseErrorKind::Unimplemented => "Unimplemented",
             ParseErrorKind::EndOfFile => "End Of File",
             ParseErrorKind::Unexpected => "Unexpected",
+            ParseErrorKind::RowSatisfied => "Table row is full",
+            ParseErrorKind::Unsatisfied => "Record Unsatisfied",
             ParseErrorKind::Io(ref err) => err.description(),
             ParseErrorKind::ParseInt(ref err) => err.description(),
             _ => unreachable!(),
@@ -127,9 +134,11 @@ impl StdError for ParseError {
     fn cause(&self) -> Option<&dyn StdError> {
         //----------------------------------------------------------------------
         match *self.0 {
-            ParseErrorKind::Unimplemented => None,
-            ParseErrorKind::EndOfFile => None,
-            ParseErrorKind::Unexpected => None,
+            ParseErrorKind::Unimplemented
+            | ParseErrorKind::EndOfFile
+            | ParseErrorKind::Unexpected
+            | ParseErrorKind::RowSatisfied
+            | ParseErrorKind::Unsatisfied => None,
             ParseErrorKind::Io(ref err) => Some(err),
             ParseErrorKind::ParseInt(ref err) => Some(err),
             _ => unreachable!(),
@@ -145,6 +154,8 @@ impl fmt::Display for ParseError {
             ParseErrorKind::Unimplemented => write!(f, "Unimplemented"),
             ParseErrorKind::EndOfFile => write!(f, "End Of File"),
             ParseErrorKind::Unexpected => write!(f, "Unexpected"),
+            ParseErrorKind::RowSatisfied => write!(f, "Table row is full"),
+            ParseErrorKind::Unsatisfied => write!(f, "Record Unsatisfied"),
             ParseErrorKind::Io(ref err) => err.fmt(f),
             ParseErrorKind::ParseInt(ref err) => err.fmt(f),
             _ => unreachable!(),

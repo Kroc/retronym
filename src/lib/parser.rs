@@ -15,6 +15,39 @@ pub(crate) mod pest {
     pub struct RymParser;
 }
 
+use crate::node::MaybeNode;
+
+/// During building of the `AST`, the methods return either a new `Node` to
+/// attach to the `AST`, or a `ParseError`.
+pub type ASTResult<'token> = ParseResult<MaybeNode<'token>>;
+
+impl From<ParseError> for ASTResult<'_> {
+    //==========================================================================
+    /// For brevity, allow conversion of a `ParseError` to an `ASTResult`,
+    /// i.e. `Result<Err(ParseError)>`.
+    ///
+    fn from(parse_error: ParseError) -> Self {
+        //----------------------------------------------------------------------
+        Err(parse_error)
+    }
+}
+
+impl<'token> From<Node<'token>> for ASTResult<'token> {
+    //==========================================================================
+    fn from(node: Node<'token>) -> Self {
+        //----------------------------------------------------------------------
+        Ok(Some(node))
+    }
+}
+
+impl<'token> From<Token<'token>> for ASTResult<'token> {
+    //==========================================================================
+    fn from(token: Token<'token>) -> Self {
+        //----------------------------------------------------------------------
+        Self::from(Node::from(token))
+    }
+}
+
 use crate::tokenizer::Tokenizer;
 use std::iter::Peekable;
 
@@ -24,7 +57,7 @@ pub struct Parser<'token> {
 
 use crate::error::*;
 use crate::list::List;
-use crate::node::{ASTResult, Node};
+use crate::node::Node;
 use crate::token::Token;
 
 impl<'token> Parser<'token> {

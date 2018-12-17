@@ -21,7 +21,7 @@
 
 /// Native, target-system, primitive types;
 /// described in number of bits.
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Primitive {
     /// A single bit. Cannot be named `bit` due to conflict with the `bit`
     /// instruction on Z80 cpus.
@@ -46,16 +46,12 @@ impl Display for Primitive {
     /// Give the normalised string representation of a primitive type.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------
-        write!(
-            f,
-            "{}",
-            match self {
-                Primitive::BOOL => "bool",
-                Primitive::NYBL => "nybl",
-                Primitive::BYTE => "byte",
-                Primitive::WORD => "word",
-                Primitive::LONG => "long",
-            }
-        )
+        f.write_str(match self {
+            Primitive::BOOL => "bool",
+            Primitive::NYBL => "nybl",
+            Primitive::BYTE => "byte",
+            Primitive::WORD => "word",
+            Primitive::LONG => "long",
+        })
     }
 }

@@ -12,7 +12,7 @@ use crate::field::Field;
 use crate::object::Object;
 use crate::primitive::Primitive;
 use crate::r#struct::Struct;
-use crate::table::Table;
+use crate::table::{TableBuilder};
 
 impl<'token> Assembler<'token> {
     //==========================================================================
@@ -69,7 +69,7 @@ impl<'token> Assembler<'token> {
 
         // create the initial data table,
         // and apply the record-type to it
-        let mut table = Table::from(&record);
+        let mut table = TableBuilder::new(&record);
 
         // TODO: macro expansion pass? we still need to think about how macros
         // will consume elements ahead of themselves
@@ -83,12 +83,10 @@ impl<'token> Assembler<'token> {
                 // data to be packed:
                 _ if n.is_data() => {table.add_data(n);},
                 // unhandled!
-                _ => println!(": {}", n),
+                _ => println!(": {:?}", n),
             };
         }
 
-        table.finish();
-
-        println!("{}", table);
+        println!("{:?}", table.finish().unwrap());
     }
 }

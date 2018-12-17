@@ -5,7 +5,9 @@ use crate::node::Node;
 use crate::ops::Operator;
 use crate::token::Token;
 
-#[derive(Debug)]
+/// An Expression; a calculation consisting of a left-hand-side,
+/// a right-hand-side and an operator to combine the two.
+///
 pub struct Expr<'token> {
     pub left: Node<'token>,
     pub oper: Operator,
@@ -37,7 +39,16 @@ impl<'token> Display for Expr<'token> {
     //==========================================================================
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------
-        // TODO: Operator to string
-        write!(f, "({} {} {})", self.left, self.oper, self.right)
+        write!(f, "{} {} {}", self.left, self.oper, self.right)
+    }
+}
+
+impl<'token> Debug for Expr<'token> {
+    //==========================================================================
+    /// Debug printing an Expression includes the wrapping parentheses.
+    ///
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
+        write!(f, "({:?} {} {:?})", self.left, self.oper, self.right)
     }
 }

@@ -17,14 +17,12 @@ pub struct AST<'token> {
     nodes: List<'token>,
 }
 
-use std::slice;
-
 impl<'token> IntoIterator for &'token AST<'token> {
     //==========================================================================
     type Item = &'token Node<'token>;
-    type IntoIter = slice::Iter<'token, Node<'token>>;
+    type IntoIter = std::slice::Iter<'token, Node<'token>>;
 
-    fn into_iter(self) -> slice::Iter<'token, Node<'token>> {
+    fn into_iter(self) -> std::slice::Iter<'token, Node<'token>> {
         //----------------------------------------------------------------------
         self.nodes.into_iter()
     }

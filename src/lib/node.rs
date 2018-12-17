@@ -5,13 +5,11 @@
 //! it uses an enum to differentiate numbers, strings, macros and so on.
 //! AST nodes can contain other nodes, such as with expressions.
 
-use crate::error::*;
 use crate::token::MaybeToken;
 
 /// The AST is made up of a series of nodes where each node is a top-level
 /// "statement" and may contain descendants based on type. In practice,
 /// Retronym's top-level statements are either macros or expressions.
-#[derive(Debug)]
 pub struct Node<'token> {
     /// The 'type' of the node, e.g. whether this is a literal number,
     /// an expression, a macro invocation etc. This can contain nested nodes!
@@ -72,34 +70,15 @@ pub enum Value {
     Float(f32),
 }
 
-/// During building of the `AST`, the methods return either a new `Node` to
-/// attach to the `AST`, or a `ParseError`.
-pub type ASTResult<'token> = ParseResult<MaybeNode<'token>>;
-
-impl From<ParseError> for ASTResult<'_> {
+impl Display for Value {
     //==========================================================================
-    /// For brevity, allow conversion of a `ParseError` to an `ASTResult`,
-    /// i.e. `Result<Err(ParseError)>`.
-    ///
-    fn from(parse_error: ParseError) -> Self {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------
-        Err(parse_error)
-    }
-}
-
-impl<'token> From<Node<'token>> for ASTResult<'token> {
-    //==========================================================================
-    fn from(node: Node<'token>) -> Self {
-        //----------------------------------------------------------------------
-        Ok(Some(node))
-    }
-}
-
-impl<'token> From<Token<'token>> for ASTResult<'token> {
-    //==========================================================================
-    fn from(token: Token<'token>) -> Self {
-        //----------------------------------------------------------------------
-        Self::from(Node::from(token))
+        match self {
+            Value::Int(i) => f.write_str(&i.to_string()),
+            Value::UInt(u) => f.write_str(&u.to_string()),
+            Value::Float(s) => f.write_str(&s.to_string()),
+        }
     }
 }
 
@@ -164,23 +143,21 @@ impl<'token> Node<'token> {
 
     /// Does this Node contain data? That is, a literal value, expression
     /// or a symbol that can be resolved into a value.
-    /// 
+    ///
     pub fn is_data(&self) -> bool {
         //----------------------------------------------------------------------
         match self.kind {
-            NodeKind::Value(_)
-            | NodeKind::Expr(_)
-            | NodeKind::Str(_) => true,
+            NodeKind::Value(_) | NodeKind::Expr(_) | NodeKind::Str(_) => true,
             _ => false,
         }
     }
 
     /// Is this Node a Record?
-    /// 
+    ///
     /// The AST only stores Records as a `List` because any struct-nesting
     /// can not be resolved until all structs are defined and these might
     /// be in other modules.
-    /// 
+    ///
     pub fn is_record(&self) -> bool {
         //----------------------------------------------------------------------
         match self.kind {
@@ -200,7 +177,7 @@ impl<'token> Node<'token> {
     }
 
     /// Is this Node an Atom reference?
-    /// 
+    ///
     pub fn is_atom(&self) -> bool {
         //----------------------------------------------------------------------
         match self.kind {
@@ -210,7 +187,7 @@ impl<'token> Node<'token> {
     }
 
     /// Is this Node a Macro invocation?
-    /// 
+    ///
     pub fn is_macro(&self) -> bool {
         //----------------------------------------------------------------------
         match self.kind {
@@ -274,14 +251,21 @@ impl Display for Node<'_> {
     }
 }
 
-impl Display for Value {
+impl Debug for Node<'_> {
     //==========================================================================
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------
-        match self {
-            Value::Int(i) => write!(f, "{}", i),
-            Value::UInt(u) => write!(f, "{}", u),
-            Value::Float(d) => write!(f, "{}", d),
+        match self.kind {
+            NodeKind::Void => write!(f, "<VOID>"),
+            NodeKind::DefAtom(ref a) => write!(f, "atom {:?}", a),
+            NodeKind::Primitive(ref p) => write!(f, "{:?}", p),
+            NodeKind::Record(ref l) => write!(f, "{:?}", l),
+            NodeKind::List(ref l) => write!(f, "{:?}", l),
+            NodeKind::Expr(ref x) => write!(f, "{:?}", x),
+            NodeKind::Atom(ref a) => write!(f, "{:?}", a),
+            NodeKind::Macro(ref m) => write!(f, "{:?}", m),
+            NodeKind::Str(ref s) => write!(f, "{}", s),
+            NodeKind::Value(ref v) => write!(f, "{}", v),
         }
     }
 }
