@@ -24,11 +24,11 @@ impl<'token> Expr<'token> {
         //----------------------------------------------------------------------
         Self {
             // left hand side:
-            left: left,
+            left,
             // convert op token to op enum:
             oper: Operator::from(oper),
             // right hand side:
-            right: right,
+            right,
         }
     }
 }

@@ -8,7 +8,7 @@ use std::io::Write;
 pub fn repl() {
     // display REPL header
     println!("(use ^C to quit)");
-    println!("");
+    println!();
     io::stdout().flush().unwrap();
 
     // start up the REPL

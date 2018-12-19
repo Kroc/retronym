@@ -9,11 +9,47 @@ pub struct Field<'token> {
     /// Provide a reference back to the source code where the field was
     /// defined, for error messages when a value does not fit into a field.
     _token: Option<Token<'token>>,
-    /// Width, **in bits**, of the field. Bit-fields are possible,
-    /// but structs are aligned to the byte.
-    bits: usize,
     /// The data-type of the field, which can be a nested struct.
     pub kind: FieldKind<'token>,
+}
+
+// properties for `Field`:
+//
+impl Field<'_> {
+    //==========================================================================
+    pub fn cols(&self) -> usize {
+        //----------------------------------------------------------------------
+        match &self.kind {
+            FieldKind::Primitive(_) => 1,
+            FieldKind::Struct(s) => s.cols(),
+        }
+    }
+
+    pub fn bits(&self) -> usize {
+        //----------------------------------------------------------------------
+        match self.kind {
+            FieldKind::Primitive(p) => p as usize,
+            FieldKind::Struct(ref s) => s.stride() * 8,
+        }
+    }
+}
+
+use std::fmt::{self, *};
+
+impl<'token> Display for Field<'token> {
+    //==========================================================================
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
+        f.write_str(&self.kind.to_string())
+    }
+}
+
+impl<'token> Debug for Field<'token> {
+    //==========================================================================
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        //----------------------------------------------------------------------
+        write!(f, "{:?}", self.kind)
+    }
 }
 
 pub enum FieldKind<'token> {
@@ -46,24 +82,6 @@ impl<'token> Debug for FieldKind<'token> {
     }
 }
 
-use std::fmt::{self, *};
-
-impl<'token> Display for Field<'token> {
-    //==========================================================================
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        //----------------------------------------------------------------------
-        f.write_str(&self.kind.to_string())
-    }
-}
-
-impl<'token> Debug for Field<'token> {
-    //==========================================================================
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        //----------------------------------------------------------------------
-        write!(f, "{:?}", self.kind)
-    }
-}
-
 use std::convert::From;
 
 impl From<Primitive> for Field<'_> {
@@ -73,24 +91,47 @@ impl From<Primitive> for Field<'_> {
         Self {
             _token: None,
             kind: FieldKind::Primitive(primitive),
-            /// the Primitive enum equals the number of bits.
-            bits: primitive as usize,
         }
     }
 }
 
-impl Field<'_> {
+use crate::node::{Node, NodeKind};
+
+impl<'token> From<&'token Node<'token>> for Field<'token> {
     //==========================================================================
-    pub fn cols(&self) -> usize {
+    fn from(node: &'token Node<'token>) -> Self {
         //----------------------------------------------------------------------
-        match &self.kind {
-            FieldKind::Primitive(_) => 1,
-            FieldKind::Struct(s) => s.cols(),
+        match &node.token {
+            // if the Node has a Token, we can convert from that
+            Some(t) => Field::from(t),
+            // without a Token, we build from the Node information
+            None => Self {
+                _token: None,
+                kind: match node.kind {
+                    NodeKind::Primitive(p) => FieldKind::Primitive(p),
+                    // TODO: nested Structs
+                    _ => unimplemented!(),
+                },
+            },
         }
     }
+}
 
-    pub fn bits(&self) -> usize {
+use crate::token::TokenKind;
+
+impl<'token> From<&'token Token<'token>> for Field<'token> {
+    //==========================================================================
+    fn from(token: &'token Token<'token>) -> Self {
         //----------------------------------------------------------------------
-        self.bits
+        Self {
+            kind: match token.kind() {
+                TokenKind::Primitive(p) => FieldKind::Primitive(p),
+                // TODO: resolve nested Structs
+                TokenKind::Struct(_) => unimplemented!(),
+                // not a Token that can be converted into a Field Type!
+                _ => panic!(),
+            },
+            _token: Some(token.clone()),
+        }
     }
 }

@@ -1,6 +1,24 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
+//! The **Parser** is what splits source code text into 'words' ("lexemes"
+//! in parser terminology) and begins assigning machine-understandable meaning
+//! to them, e.g. turning the string "42" into an integer 42.
+//!
+//! Parsing works by utilising a pipe-line process of turning the source code
+//! text into gradually more high-level structures.
+//!
+//! The first stage of any parser is generally called "scanning" (or "lexing");
+//! the only concern in this stage is splitting the source text into words
+//! ("lexemes") by rules of word-boundaries, typically spaces, but also more
+//! complex patterns where spaces may be ommitted such as with operators
+//! (e.g. "1+2").
+//!
+//! The next stage is "tokenization". The lexemes are analysed for basic
+//! meaning such as numbers or strings and turned into `Token`s. Each is
+//! self-contained and not aware of its siblings so the overall grammar
+//! (how one token applies to another) is not-enforced.
+
 // force the Rust compiler to acknowlege external changes to the grammer file
 // (this is recommended to do by Pest)
 #[cfg(debug_assertions)]

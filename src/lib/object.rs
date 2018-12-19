@@ -21,6 +21,7 @@ pub struct Object<'token> {
     _structs: Structs<'token>,
 }
 
+use crate::error::*;
 use crate::node::Node;
 
 impl<'token> Object<'token> {
@@ -29,8 +30,14 @@ impl<'token> Object<'token> {
     ///
     /// Takes a reference to an AST `Node`, since the node will remain in the
     /// AST and the Atom will only need the token within.
-    /// 
-    pub fn new_atom(&mut self, node: &'token Node<'token>) {
-        self.atoms.insert(node.to_string(), Atom::from(node));
+    ///
+    /// Returns `None` if successful, otherwise if attempting to define an
+    /// Atom that already exists, returns a `ParseError`.
+    ///
+    pub fn new_atom(&mut self, node: &'token Node<'token>) -> MaybeError {
+        self.atoms
+            .insert(node.to_string(), Atom::from(node))
+            //TODO: include error details from the `Ok(V)`
+            .and_then(|_v| Some(ParseError::duplicate()))
     }
 }

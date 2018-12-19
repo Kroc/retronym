@@ -24,6 +24,11 @@ pub struct Node<'token> {
 
 pub type MaybeNode<'token> = Option<Node<'token>>;
 
+/// If you need to iterate on Nodes,
+/// you can use this shorthand type.
+///
+pub type NodeIter<'token> = std::slice::Iter<'token, Node<'token>>;
+
 use crate::expr::Expr;
 use crate::list::List;
 use crate::primitive::Primitive;

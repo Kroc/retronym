@@ -1,6 +1,8 @@
 // retronym (C) copyright Kroc Camen 2017, 2018
 // BSD 2-clause licence; see LICENSE.TXT
 
+//! Anything that can go wrong, will go wrong.
+
 // NB: A lot of hints and direction taken from BurntSushi's code:
 // https://github.com/BurntSushi/rust-csv/blob/master/src/error.rs
 
@@ -20,11 +22,18 @@ pub struct ParseError(Box<ParseErrorKind>);
 /// The specific type of an error:
 #[derive(Debug)]
 pub enum ParseErrorKind {
-    /// "End Of File" error. This occurs when reading tokens and you reach
-    /// the end. It's up to the caller to decide if this is "unexpected".
+    /// "End Of File" error. This occurs when processing the AST statements
+    /// and the end of file is reached; it's up to the caller to decide if
+    /// this is "unexpected".
     EndOfFile,
 
     Unexpected,
+
+    /// Duplicate defintion.
+    Duplicate,
+
+    /// Cannot pack data without specifying a Record first.
+    NoRecord,
 
     /// Cannot add any more data to a Table Row when it is already full.
     RowSatisfied,
@@ -49,12 +58,17 @@ pub enum ParseErrorKind {
 }
 
 /// A crate-private constructor for `ParseError`.
+/// Consumers of this library should never make their own ParseError!
+///
 pub(crate) fn parse_error(kind: ParseErrorKind) -> ParseError {
     //--------------------------------------------------------------------------
     ParseError(Box::new(kind))
 }
 
-/// The `Result` type that includes `ParseError`
+/// When you only need to return a potential Error.
+pub type MaybeError = Option<ParseError>;
+
+/// The `Result` type that includes `ParseError`.
 pub type ParseResult<T> = result::Result<T, ParseError>;
 
 // "I AM ERROR!"
@@ -74,6 +88,22 @@ impl ParseError {
     pub(crate) fn unexpected() -> Self {
         //----------------------------------------------------------------------
         ParseError(Box::new(ParseErrorKind::Unexpected))
+    }
+
+    /// Create a `Duplicate` error.
+    ///
+    #[allow(dead_code)]
+    pub(crate) fn duplicate() -> Self {
+        //----------------------------------------------------------------------
+        ParseError(Box::new(ParseErrorKind::Duplicate))
+    }
+
+    /// Create a `NoRecord` error.
+    ///
+    #[allow(dead_code)]
+    pub(crate) fn no_record() -> Self {
+        //----------------------------------------------------------------------
+        ParseError(Box::new(ParseErrorKind::NoRecord))
     }
 
     /// Return the specific type of this error.
@@ -123,6 +153,8 @@ impl StdError for ParseError {
             ParseErrorKind::Unimplemented => "Unimplemented",
             ParseErrorKind::EndOfFile => "End Of File",
             ParseErrorKind::Unexpected => "Unexpected",
+            ParseErrorKind::Duplicate => "Duplicate",
+            ParseErrorKind::NoRecord => "No Record",
             ParseErrorKind::RowSatisfied => "Table row is full",
             ParseErrorKind::Unsatisfied => "Record Unsatisfied",
             ParseErrorKind::Io(ref err) => err.description(),
@@ -137,6 +169,7 @@ impl StdError for ParseError {
             ParseErrorKind::Unimplemented
             | ParseErrorKind::EndOfFile
             | ParseErrorKind::Unexpected
+            | ParseErrorKind::NoRecord
             | ParseErrorKind::RowSatisfied
             | ParseErrorKind::Unsatisfied => None,
             ParseErrorKind::Io(ref err) => Some(err),
@@ -154,6 +187,8 @@ impl fmt::Display for ParseError {
             ParseErrorKind::Unimplemented => write!(f, "Unimplemented"),
             ParseErrorKind::EndOfFile => write!(f, "End Of File"),
             ParseErrorKind::Unexpected => write!(f, "Unexpected"),
+            ParseErrorKind::Duplicate => write!(f, "Duplicate"),
+            ParseErrorKind::NoRecord => write!(f, "No Record"),
             ParseErrorKind::RowSatisfied => write!(f, "Table row is full"),
             ParseErrorKind::Unsatisfied => write!(f, "Record Unsatisfied"),
             ParseErrorKind::Io(ref err) => err.fmt(f),

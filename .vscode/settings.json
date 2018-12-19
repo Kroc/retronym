@@ -32,5 +32,7 @@
         "latex",
         "plaintext"
     ],
-    "rust.clippy_preference": "on"
+    "rust.clippy_preference": "on",
+    /// When RLS is installed, we don't want to run cargo-check twice
+    //"cargo.automaticCheck": false
 }

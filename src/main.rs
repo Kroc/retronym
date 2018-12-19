@@ -14,10 +14,10 @@ use std::io;
 use std::io::Write;
 
 fn main() {
-    println!("");
+    println!();
     println!("Retronym (C) copryright Kroc Camen 2017, 2018");
     println!("BSD 2-clause licence; see LICENSE.TXT");
-    println!("");
+    println!();
     io::stdout().flush().unwrap();
 
     repl::repl();

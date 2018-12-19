@@ -5,8 +5,8 @@
 //! away with the text of the source code and turns it into discrete types that
 //! we can quickly recognise without having to read out words letter-by-letter.
 
-use crate::node::Node;
 use crate::list::List;
+use crate::node::Node;
 
 /// The "Abstract Syntax Tree" is a machine understandable respresentation of
 /// some source code. Because AST nodes can contain a reference back to the
@@ -17,12 +17,14 @@ pub struct AST<'token> {
     nodes: List<'token>,
 }
 
+use crate::node::NodeIter;
+
 impl<'token> IntoIterator for &'token AST<'token> {
     //==========================================================================
     type Item = &'token Node<'token>;
-    type IntoIter = std::slice::Iter<'token, Node<'token>>;
+    type IntoIter = NodeIter<'token>;
 
-    fn into_iter(self) -> std::slice::Iter<'token, Node<'token>> {
+    fn into_iter(self) -> NodeIter<'token> {
         //----------------------------------------------------------------------
         self.nodes.into_iter()
     }

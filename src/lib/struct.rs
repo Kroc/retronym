@@ -2,23 +2,26 @@
 // BSD 2-clause licence; see LICENSE.TXT
 
 //! Used-defined **structure** types.
+//!
+//! ## Examples ##
+//!
+//! The example below defines a new Retronym struct
+//! named "point" containing two fields, each a byte wide.
+//!
+//! ```
+//! %point  byte, byte
+//! ```
+//!
 
 use crate::field::Field;
 
-/// A Struct is a user-defined structure in Retronym, consisting of a
-/// list of types (`Primitive`s / other `Struct`s).
-/// 
-/// ## Examples ##
-/// 
-/// The example below defines a new struct named "point" containing two
-/// fields, each a byte wide.
-/// 
-/// ```
-/// %point  byte, byte
-/// ```
-/// 
+// This represents a user-defined structure in Retronym, consisting of a
+// list of types (`Primitive`s / other `Struct`s). Not to be confused with
+// Rust structs.
+//
 #[derive(Default)]
 pub struct Struct<'token> {
+    /// The list of Fields in the Struct.
     fields: Vec<Field<'token>>,
     /// Width, in bytes, of the structure. Not public as this value is
     /// calculated according to the bit-packing rules.
@@ -57,7 +60,7 @@ impl<'token> IntoIterator for &'token Struct<'token> {
     type IntoIter = slice::Iter<'token, Field<'token>>;
 
     /// We only ever return references from iterating a Struct.
-    /// 
+    ///
     fn into_iter(self) -> slice::Iter<'token, Field<'token>> {
         //----------------------------------------------------------------------
         self.fields.iter()
@@ -81,9 +84,9 @@ impl<'token> Struct<'token> {
         self.cols
     }
 
-    /// Add a `Field` to the `Struct`.
+    /// Add a `Field` to the `Struct`. [Chainable]
     ///
-    pub fn add_field(&mut self, field: Field<'token>) {
+    pub fn add_field(mut self, field: Field<'token>) -> Self {
         //----------------------------------------------------------------------
         // how many bytes does this add to the stride?
         self.stride += match field.bits() {
@@ -93,6 +96,7 @@ impl<'token> Struct<'token> {
         };
         self.cols += field.cols();
         self.fields.push(field);
+        self
     }
 
     /// Get a Field from the Struct.
@@ -100,5 +104,22 @@ impl<'token> Struct<'token> {
     pub fn field(&'token self, index: usize) -> &'token Field<'token> {
         //----------------------------------------------------------------------
         &self.fields[index]
+    }
+}
+
+use crate::list::List;
+
+impl<'token> From<&'token List<'token>> for Struct<'token> {
+    //==========================================================================
+    /// "Resolve" a List of Types into a Record Struct.
+    ///
+    fn from(list: &'token List<'token>) -> Self {
+        //----------------------------------------------------------------------
+        // take the List of Nodes,
+        list.into_iter()
+            // convert each into a Field,
+            .map(Field::from)
+            // take a Struct and add each Field to it
+            .fold(Self::default(), |acc, node| acc.add_field(node))
     }
 }

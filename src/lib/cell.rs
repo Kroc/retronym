@@ -5,6 +5,7 @@ use crate::field::Field;
 use crate::node::Node;
 
 /// A **Table Cell**.
+/// 
 #[derive(Clone)]
 pub struct Cell<'token> {
     /// Reference to the Record field that this cell aligns with (column).
@@ -14,7 +15,7 @@ pub struct Cell<'token> {
     node: &'token Node<'token>,
     /// The Row number of this Cell,
     /// i.e. its Row index in a Table.
-    row: usize, 
+    row: usize,
     /// The column number of this Cell,
     /// i.e. its index in the Row.
     col: usize,
@@ -25,7 +26,7 @@ use std::fmt::{self, *};
 impl Display for Cell<'_> {
     //==========================================================================
     /// Get a normalized representation of the source code.
-    /// 
+    ///
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------
         f.write_str(&self.node.to_string())
@@ -36,10 +37,14 @@ impl Debug for Cell<'_> {
     //==========================================================================
     /// For debugging, we want to include the Cell Row & Col co-ords,
     /// and the primitive type of the Cell.
-    /// 
+    ///
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         //----------------------------------------------------------------------
-        write!(f, "[{}][{}] {:?}: {:?}", self.row, self.col, self.field, self.node)
+        write!(
+            f,
+            "[{}][{}] {:?}: {:?}",
+            self.row, self.col, self.field, self.node
+        )
     }
 }
 
@@ -54,18 +59,23 @@ impl<'token> Cell<'token> {
         col: usize,
     ) -> Self {
         //----------------------------------------------------------------------
-        Self { field, node, row, col }
+        Self {
+            field,
+            node,
+            row,
+            col,
+        }
     }
 
     /// Return the row-index of this Cell.
-    /// 
+    ///
     pub fn row(&self) -> usize {
         //----------------------------------------------------------------------
         self.row
     }
 
     /// Return the column-index of this Cell.
-    /// 
+    ///
     pub fn col(&self) -> usize {
         //----------------------------------------------------------------------
         self.col

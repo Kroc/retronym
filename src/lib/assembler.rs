@@ -3,22 +3,23 @@
 
 //! **Assembler** orchestrates the assembly process.
 
+#[derive(Default)]
 pub struct Assembler<'token> {
     _objects: Vec<Object<'token>>,
 }
 
 use crate::ast::AST;
-use crate::field::Field;
+use crate::error::*;
+use crate::node::{Node, NodeIter, NodeKind};
 use crate::object::Object;
-use crate::primitive::Primitive;
 use crate::r#struct::Struct;
-use crate::table::{TableBuilder};
+use crate::table::TableBuilder;
 
 impl<'token> Assembler<'token> {
     //==========================================================================
     /// Assembles from a string source.
     ///
-    pub fn assemble_str(source: &str) {
+    pub fn assemble_str(source: &'token str) -> Self {
         //----------------------------------------------------------------------
         //TODO:
         // - evaluate keywords by returning definitions+exports for the object
@@ -49,44 +50,80 @@ impl<'token> Assembler<'token> {
         // -- therefore actual structs / records and so on are not built until
         // all referenced files have also been parsed and we have a complete
         // pool of symbol names to draw from
-        // TODO: error handling
-        Self::assemble_ast(AST::new_from_str(source));
+
+        let asm = Assembler::default();
+        let ast = AST::new_from_str(source);
+        asm.assemble_ast(&ast);
+        asm
     }
 
     /// Assembles from an `AST`.
     ///
-    pub fn assemble_ast(ast: AST) {
+    pub fn assemble_ast(&self, ast: &AST) {
         //----------------------------------------------------------------------
         // create the Object we'll be placing the assembled resources into.
         // during assembly, new objects might be created (module references)
         let mut object = Object::default();
 
-        // create the initial record type;
-        // this dictates how data will be packed into tables
-        let mut record = Struct::default();
-        // the default record-type is a single byte (for now)
-        record.add_field(Field::from(Primitive::BYTE));
+        // create a Node iterator from the AST
+        let mut node_iter = ast.into_iter();
 
-        // create the initial data table,
-        // and apply the record-type to it
-        let mut table = TableBuilder::new(&record);
+        let node = node_iter.next().unwrap();
+        self.assemble_root(&mut object, &mut node_iter, node);
+    }
 
-        // TODO: macro expansion pass? we still need to think about how macros
-        // will consume elements ahead of themselves
-
-        // walk the AST nodes
-        for n in ast.into_iter() {
-            match () {
-                // define a new atom:
-                _ if n.is_atom_def() => {object.new_atom(n);},
-                // TODO: a record-list needs to be compiled into a record-type
-                // data to be packed:
-                _ if n.is_data() => {table.add_data(n);},
-                // unhandled!
-                _ => println!(": {:?}", n),
-            };
+    /// Begins assembly at the 'root scope', that is, statements at the
+    /// beginning of a source file, before any nesting of statements.
+    ///
+    /// Results of the assembly are placed into the given `Object`,
+    /// this method only returns an error if one occurred.
+    ///
+    fn assemble_root(
+        &self,
+        object: &'token mut Object<'token>,
+        node_iter: &'token mut NodeIter<'token>,
+        node: &'token Node<'token>,
+    ) -> MaybeError {
+        //----------------------------------------------------------------------
+        if node.is_atom_def() {
+            // define a new Atom
+            return object.new_atom(node);
+        }
+        if node.is_record() {
+            // return error if there was one
+            self.assemble_table(object, node_iter, node).err();
         }
 
-        println!("{:?}", table.finish().unwrap());
+        None
+    }
+
+    /// Pack data into a Table.
+    ///
+    fn assemble_table(
+        &self,
+        _object: &'token mut Object<'token>,
+        _node_iter: &'token mut NodeIter<'token>,
+        node: &'token Node<'token>,
+    ) -> ParseResult<&'token Node<'token>> {
+        //----------------------------------------------------------------------
+        // the record must come first -- we can't pack data without knowing
+        // what the fields are!
+
+        // the record in the AST is stored un-resolved; it's just a List of AST
+        // nodes and not a firm structure yet. This is done for the purpose of
+        // delaying the resolving of nested structures in the Record; these
+        // might be defined in other source code files!
+        let list = match &node.kind {
+            // from a `Box<List>`, get `&List`
+            NodeKind::Record(list) => list.as_ref(),
+            _ => panic!(),
+        };
+
+        let record = Struct::from(list);
+
+        // start up a TableBuilder with the Record we now have
+        let _builder = TableBuilder::new(&record);
+
+        Ok(node)
     }
 }

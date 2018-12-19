@@ -47,7 +47,6 @@ pub enum TokenKind {
     /// Token is a primitive type.
     Primitive(Primitive),
     /// Token is a struct name.
-    /// Not to be confused with a struct defintion.
     Struct(String),
     /// Token is an integer literal.
     Int(i32),
